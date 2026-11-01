@@ -13,45 +13,36 @@ Chrome extension  ──►  FastAPI WebAPI  ──►  blacklist.json
 
 ## Quick start
 
-### 1. Backend (port `8741`)
+### 1. Set up (first time only)
 
 ```bash
-cd backend
-python3 -m pip install -r requirements.txt
-export PATH="$HOME/.local/bin:$PATH"
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8741
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -r backend/requirements.txt
+npm install --prefix admin
 ```
 
-AI risk reports need a Google Gemini API key. Create a free one at [Google AI Studio](https://aistudio.google.com/apikey), then set it before starting the server:
+### 2. Start the backend and admin console
 
 ```bash
-export GEMINI_API_KEY=your-key
+./start.sh
 ```
+
+The script asks for your `GEMINI_API_KEY`, or uses it without asking if it's already exported. It then starts both servers in one terminal. Press Ctrl-C to stop them. If one server exits, the other stops too.
+
+| Service | URL |
+| --- | --- |
+| Admin console | [http://127.0.0.1:8742](http://127.0.0.1:8742) |
+| Backend | [http://127.0.0.1:8741](http://127.0.0.1:8741) |
+
+AI risk reports need a Google Gemini API key. Create a free one at [Google AI Studio](https://aistudio.google.com/apikey).
 
 The default model is `gemini-3.8-flash`. Set `GEMINI_MODEL` to use another, such as `gemini-3.5-flash-lite`.
 
 Gemini sometimes answers `503` when a model is overloaded, especially on the free tier. NetRex waits and retries, then tries `gemini-3.6-flash` and `gemini-3.5-flash-lite`, and each report names the model that produced it. Set `GEMINI_FALLBACK_MODELS` to a comma-separated list to change the fallbacks, or leave it empty for none.
 
-Without a key, the popup's heuristic score still works (blacklist, suspicious TLDs, brand bait, urgency language, password forms, etc.), but risk reports show as unavailable.
+`start.sh` requires a key. To run without one, start the backend on its own as shown below. The popup's heuristic score still works (blacklist, suspicious TLDs, brand bait, urgency language, password forms, etc.), but risk reports show as unavailable.
 
-Run the backend tests with `python3 -m pip install pytest && cd backend && python3 -m pytest tests`.
-
-### 2. Admin console (port `8742`)
-
-```bash
-cd admin
-npm install
-npm run dev
-```
-
-Open [http://127.0.0.1:8742](http://127.0.0.1:8742).
-
-Or build and let FastAPI serve it from `/`:
-
-```bash
-cd admin && npm run build
-# then start uvicorn as above and open http://127.0.0.1:8741
-```
+With the virtual environment active, run the backend tests with `python3 -m pip install pytest && cd backend && python3 -m pytest tests`.
 
 ### 3. Chrome extension
 
@@ -59,6 +50,33 @@ cd admin && npm run build
 2. Enable **Developer mode**
 3. **Load unpacked** → select the `extension/` folder
 4. Keep the API on `http://127.0.0.1:8741` (change under the extension Options page if needed)
+
+### Alternative: start each server separately
+
+Run each one in its own terminal, after the setup in step 1.
+
+Backend (port `8741`):
+
+```bash
+cd backend
+source .venv/bin/activate
+export GEMINI_API_KEY=your-key
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8741
+```
+
+Admin console (port `8742`):
+
+```bash
+cd admin
+npm run dev
+```
+
+Or build the admin console and let FastAPI serve it from `/`:
+
+```bash
+cd admin && npm run build
+# then start the backend and open http://127.0.0.1:8741
+```
 
 ## What demos well
 
