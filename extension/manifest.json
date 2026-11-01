@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AI Cybersecurity Guardian",
+  "name": "NetRex",
   "version": "1.0.0",
-  "description": "Blocks risky domains, highlights blacklisted links, and shows an AI-assisted risk score.",
+  "description": "Blocks risky domains, highlights blacklisted links, and shows an AI-assisted severity score.",
   "permissions": ["storage", "tabs", "scripting", "webNavigation"],
   "host_permissions": ["<all_urls>", "http://127.0.0.1:8741/*", "http://localhost:8741/*"],
   "background": {
@@ -11,7 +11,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Guardian",
+    "default_title": "NetRex",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

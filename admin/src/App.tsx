@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   AlertTriangle,
   Link2,
@@ -10,7 +10,13 @@ import {
   Trash2,
 } from "lucide-react";
 import { api, type AnalyzeResult, type BlacklistEntry, type Severity } from "./api";
-import { Panel, RiskGauge, SeverityBadge } from "./components";
+import {
+  BrandHeadline,
+  CriteriaBreakdown,
+  Panel,
+  RiskGauge,
+  SeverityBadge,
+} from "./components";
 
 export default function App() {
   const [domains, setDomains] = useState<BlacklistEntry[]>([]);
@@ -25,6 +31,10 @@ export default function App() {
   const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [apiOnline, setApiOnline] = useState(false);
+  const analyzerColRef = useRef<HTMLDivElement>(null);
+  const resultsScrollRef = useRef<HTMLDivElement>(null);
+  const resultsTopRef = useRef<HTMLDivElement>(null);
+  const savedResultsScroll = useRef(0);
 
   async function refresh() {
     setLoading(true);
@@ -99,6 +109,7 @@ export default function App() {
     if (!analyzeUrl.trim()) return;
     setAnalyzing(true);
     setError(null);
+    savedResultsScroll.current = 0;
     try {
       const result = await api.analyze(analyzeUrl.trim());
       setAnalysis(result);
@@ -109,22 +120,55 @@ export default function App() {
     }
   }
 
+  useEffect(() => {
+    if (!analysis) return;
+    const col = analyzerColRef.current;
+    const scroller = resultsScrollRef.current;
+    const top = resultsTopRef.current;
+    // Bring analyzer column into view, then pin results to the top of their pane
+    col?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    requestAnimationFrame(() => {
+      if (scroller) scroller.scrollTop = 0;
+      top?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, [analysis]);
+
+  function rememberResultsScroll() {
+    if (resultsScrollRef.current) {
+      savedResultsScroll.current = resultsScrollRef.current.scrollTop;
+    }
+  }
+
+  useEffect(() => {
+    const scroller = resultsScrollRef.current;
+    if (!scroller || !analysis) return;
+    // Restore scroll after criteria / list re-renders while browsing results
+    scroller.scrollTop = savedResultsScroll.current;
+  }, [analysis, domains, query]);
+
   return (
     <div className="relative mx-auto min-h-svh max-w-6xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
       <header className="animate-rise mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div>
+        <div className="brand-lockup">
           <div className="mb-3 inline-flex items-center gap-2 text-[var(--signal)]">
             <span className="pulse-dot relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--signal)]" />
             <span className="text-xs font-semibold uppercase tracking-[0.22em]">
               Live protection console
             </span>
           </div>
-          <h1 className="font-[family-name:var(--font-display)] text-5xl font-extrabold leading-[0.95] tracking-tight text-[var(--ink)] sm:text-6xl">
-            Guardian
-          </h1>
-          <p className="mt-3 max-w-xl text-base text-[var(--ink-soft)] sm:text-lg">
-            Block risky domains, score phishing risk, and feed the Chrome
-            extension in real time.
+          <BrandHeadline />
+          <p className="pitch-line" aria-label="Stop phishing on sites and email, score severity, protect in real time">
+            <span className="pitch-line__phrase">
+              Stop <em>phishing</em> on sites &amp; email
+            </span>
+            <span className="pitch-line__sep" aria-hidden="true" />
+            <span className="pitch-line__phrase">
+              Score <em>severity %</em>
+            </span>
+            <span className="pitch-line__sep" aria-hidden="true" />
+            <span className="pitch-line__phrase">
+              Protect in <em>real time</em>
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-3 self-start rounded-xl border border-[var(--line)] bg-white/70 px-4 py-3 backdrop-blur md:self-auto">
@@ -151,7 +195,7 @@ export default function App() {
         </div>
       )}
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: "Blocked domains", value: domains.length, tone: "text-[var(--ink)]" },
           { label: "Critical", value: severityCounts.critical || 0, tone: "text-[var(--signal)]" },
@@ -162,10 +206,7 @@ export default function App() {
             tone: "text-[var(--ink-soft)]",
           },
         ].map((card, i) => (
-          <Panel
-            key={card.label}
-            className={`animate-rise-delay-${i} !p-4`}
-          >
+          <Panel key={card.label} className={`animate-rise-delay-${i} !p-4`}>
             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-soft)]">
               {card.label}
             </div>
@@ -178,15 +219,15 @@ export default function App() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <Panel className="animate-rise-delay-1">
+      <div className="workspace-split grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,65%)_minmax(0,35%)]">
+        <Panel className="animate-rise-delay-1 min-w-0">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold">
                 Blacklist
               </h2>
               <p className="mt-1 text-sm text-[var(--ink-soft)]">
-                Domains here are blocked by the extension and highlighted in red
+                Domains here are blocked by NetRex and highlighted in red
                 wherever they appear.
               </p>
             </div>
@@ -297,103 +338,129 @@ export default function App() {
           </div>
         </Panel>
 
-        <div className="flex flex-col gap-6">
-          <Panel className="animate-rise-delay-2">
-            <div className="mb-4 flex items-center gap-2">
-              <Link2 className="h-5 w-5 text-[var(--amber)]" />
-              <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold">
-                Risk analyzer
-              </h2>
+        <div
+          ref={analyzerColRef}
+          className="flex min-w-0 flex-col gap-4 lg:self-start"
+        >
+          <Panel className="analyzer-panel animate-rise-delay-2 flex min-h-0 flex-col !p-0">
+            <div className="shrink-0 border-b border-[var(--line)] px-5 pt-5 pb-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Link2 className="h-5 w-5 text-[var(--amber)]" />
+                <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold">
+                  Risk analyzer
+                </h2>
+              </div>
+              <div className="analyzer-tagline" aria-label="Severity thresholds">
+                <span className="analyzer-tag analyzer-tag--low">
+                  <span className="analyzer-tag__range">0–29</span>
+                  <span className="analyzer-tag__label">low</span>
+                </span>
+                <span className="analyzer-tag analyzer-tag--medium">
+                  <span className="analyzer-tag__range">30–59</span>
+                  <span className="analyzer-tag__label">medium</span>
+                </span>
+                <span className="analyzer-tag analyzer-tag--high">
+                  <span className="analyzer-tag__range">60–79</span>
+                  <span className="analyzer-tag__label">high</span>
+                </span>
+                <span className="analyzer-tag analyzer-tag--critical">
+                  <span className="analyzer-tag__range">80–100</span>
+                  <span className="analyzer-tag__label">critical</span>
+                </span>
+              </div>
+              <form onSubmit={onAnalyze} className="flex flex-col gap-2 xl:flex-row">
+                <input
+                  value={analyzeUrl}
+                  onChange={(e) => setAnalyzeUrl(e.target.value)}
+                  placeholder="https://suspicious-site.xyz"
+                  className="min-w-0 flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 font-[family-name:var(--font-mono)] text-sm outline-none focus:ring-2 focus:ring-[var(--amber)]"
+                />
+                <button
+                  type="submit"
+                  disabled={analyzing}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--signal)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--signal-deep)] disabled:opacity-60"
+                >
+                  <ShieldOff className="h-4 w-4" />
+                  {analyzing ? "Scoring…" : "Analyze"}
+                </button>
+              </form>
             </div>
-            <p className="mb-4 text-sm text-[var(--ink-soft)]">
-              Score any URL with heuristics (and an optional LLM if{" "}
-              <code className="rounded bg-[var(--paper-2)] px-1 font-[family-name:var(--font-mono)] text-xs">
-                OPENAI_API_KEY
-              </code>{" "}
-              is set).
-            </p>
-            <form onSubmit={onAnalyze} className="flex flex-col gap-3 sm:flex-row">
-              <input
-                value={analyzeUrl}
-                onChange={(e) => setAnalyzeUrl(e.target.value)}
-                placeholder="https://suspicious-site.xyz"
-                className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 font-[family-name:var(--font-mono)] text-sm outline-none focus:ring-2 focus:ring-[var(--amber)]"
-              />
-              <button
-                type="submit"
-                disabled={analyzing}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--signal)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--signal-deep)] disabled:opacity-60"
-              >
-                <ShieldOff className="h-4 w-4" />
-                {analyzing ? "Scoring…" : "Analyze"}
-              </button>
-            </form>
 
-            {analysis ? (
-              <div className="mt-6 space-y-4">
-                <RiskGauge score={analysis.score} level={analysis.level} />
-                <div className="rounded-xl bg-[var(--ink)] px-4 py-3 text-sm text-[#e8f0ec]">
-                  <div className="font-[family-name:var(--font-mono)] text-[var(--amber-soft)]">
-                    {analysis.domain || "unknown"}
-                  </div>
-                  <p className="mt-1 leading-relaxed">{analysis.summary}</p>
-                  {analysis.llm && (
-                    <div className="mt-2 text-[11px] uppercase tracking-wider text-[#9db8ae]">
-                      LLM-enhanced
+            <div
+              ref={resultsScrollRef}
+              onScroll={rememberResultsScroll}
+              className="analyzer-results max-h-[min(70vh,640px)] overflow-y-auto overscroll-contain px-5 py-4"
+            >
+              {analysis ? (
+                <div ref={resultsTopRef} className="space-y-4">
+                  <RiskGauge score={analysis.severity ?? analysis.score} level={analysis.level} />
+                  <div className="rounded-xl bg-[var(--ink)] px-4 py-3 text-sm text-[#e8f0ec]">
+                    <div className="font-[family-name:var(--font-mono)] text-[var(--amber-soft)]">
+                      {analysis.domain || "unknown"}
                     </div>
-                  )}
-                </div>
-                <ul className="space-y-2">
-                  {analysis.factors.map((factor) => (
-                    <li
-                      key={factor}
-                      className="flex gap-2 rounded-lg border border-[var(--line)] bg-white/60 px-3 py-2 text-sm"
-                    >
-                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--amber)]" />
-                      <span>{factor}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-soft)]">
-                    Recommendations
-                  </h3>
-                  <ol className="space-y-1.5 text-sm text-[var(--ink-soft)]">
-                    {analysis.recommendations.map((tip, idx) => (
-                      <li key={tip}>
-                        <span className="mr-2 font-[family-name:var(--font-mono)] text-[var(--safe)]">
-                          {idx + 1}.
-                        </span>
-                        {tip}
+                    <p className="mt-1 leading-relaxed">{analysis.summary}</p>
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-[#9db8ae]">
+                      {analysis.llm && <span>LLM criteria</span>}
+                      {analysis.prompt_injection_detected && (
+                        <span className="text-[var(--signal)]">Prompt injection flagged</span>
+                      )}
+                    </div>
+                  </div>
+                  <CriteriaBreakdown
+                    criteria={analysis.criteria}
+                    weights={analysis.weights}
+                  />
+                  <ul className="space-y-2">
+                    {analysis.factors.map((factor) => (
+                      <li
+                        key={factor}
+                        className="flex gap-2 rounded-lg border border-[var(--line)] bg-white/60 px-3 py-2 text-sm"
+                      >
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--amber)]" />
+                        <span>{factor}</span>
                       </li>
                     ))}
-                  </ol>
+                  </ul>
+                  <div>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-soft)]">
+                      Recommendations
+                    </h3>
+                    <ol className="space-y-1.5 text-sm text-[var(--ink-soft)]">
+                      {analysis.recommendations.map((tip, idx) => (
+                        <li key={tip}>
+                          <span className="mr-2 font-[family-name:var(--font-mono)] text-[var(--safe)]">
+                            {idx + 1}.
+                          </span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="mt-8 rounded-xl border border-dashed border-[var(--line)] px-4 py-10 text-center text-sm text-[var(--ink-soft)]">
-                Run an analysis to see the risk score, factors, and guidance.
-              </div>
-            )}
+              ) : (
+                <div className="rounded-xl border border-dashed border-[var(--line)] px-4 py-10 text-center text-sm text-[var(--ink-soft)]">
+                  Run an analysis to see severity %, criterion scores, and guidance.
+                </div>
+              )}
+            </div>
           </Panel>
 
-          <Panel className="animate-rise-delay-3 !bg-[var(--ink)] !text-[#e8f0ec]">
-            <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-white">
+          <Panel className="animate-rise-delay-3 !bg-[var(--ink)] !p-4 !text-[#e8f0ec]">
+            <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-white">
               Extension loop
             </h2>
-            <ol className="mt-3 space-y-3 text-sm leading-relaxed text-[#b7cdc3]">
+            <ol className="mt-2 space-y-2 text-xs leading-relaxed text-[#b7cdc3]">
               <li>
-                <span className="font-semibold text-[var(--amber-soft)]">1.</span> Extension
-                asks <code className="text-[#e8f0ec]">/api/check</code> on every navigation.
+                <span className="font-semibold text-[var(--amber-soft)]">1.</span>{" "}
+                <code className="text-[#e8f0ec]">/api/check</code> on navigation
               </li>
               <li>
-                <span className="font-semibold text-[var(--amber-soft)]">2.</span> Blocked
-                hosts get an interstitial; page HTML is scanned via{" "}
-                <code className="text-[#e8f0ec]">/api/scan</code>.
+                <span className="font-semibold text-[var(--amber-soft)]">2.</span> Block +{" "}
+                <code className="text-[#e8f0ec]">/api/scan</code>
               </li>
               <li>
-                <span className="font-semibold text-[var(--amber-soft)]">3.</span> Matches are
-                painted red in-page; popup shows the live risk score.
+                <span className="font-semibold text-[var(--amber-soft)]">3.</span> Highlights +
+                live severity
               </li>
             </ol>
           </Panel>

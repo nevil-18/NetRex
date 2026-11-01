@@ -52,7 +52,7 @@
         const mark = document.createElement("mark");
         mark.setAttribute(STYLE_ATTR, severity || "high");
         mark.className = `guardian-mark guardian-${severity || "high"}`;
-        mark.title = `Guardian: blacklisted domain (${domain})`;
+        mark.title = `NetRex: blacklisted domain (${domain})`;
         mark.textContent = value.slice(idx, idx + needle.length);
         frag.appendChild(mark);
         cursor = idx + needle.length;
@@ -69,7 +69,7 @@
       if (href.includes(needle) && !a.querySelector(`[${STYLE_ATTR}]`)) {
         a.classList.add("guardian-link-flag");
         a.setAttribute("data-guardian-domain", domain);
-        a.title = `Guardian warning: link points to blacklisted domain ${domain}`;
+        a.title = `NetRex warning: link points to blacklisted domain ${domain}`;
       }
     });
   }

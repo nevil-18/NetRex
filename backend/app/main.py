@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parent.parent
 ADMIN_DIST = ROOT.parent / "admin" / "dist"
 
 app = FastAPI(
-    title="AI Cybersecurity Guardian",
-    description="WebAPI for the Guardian Chrome extension and admin console.",
+    title="NetRex",
+    description="WebAPI for the NetRex Chrome extension and admin console.",
     version="1.0.0",
 )
 
@@ -59,7 +59,7 @@ class AnalyzeIn(BaseModel):
 def health() -> dict[str, Any]:
     return {
         "ok": True,
-        "service": "AI Cybersecurity Guardian",
+        "service": "NetRex",
         "blacklist": blacklist_store.stats(),
     }
 
@@ -99,17 +99,25 @@ def check_domain(body: CheckIn) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Provide url or domain")
     entry = blacklist_store.is_blocked(host)
     blocked = entry is not None
-    # lightweight score without HTML
+    # lightweight weighted severity without HTML
     analysis = risk_engine.heuristic_analyze(body.url or host, None)
+    level = analysis["level"]
+    # Critical severity (80–100) is treated as a block signal
+    if level == "critical":
+        blocked = True
     return {
         "domain": host,
         "blocked": blocked,
         "entry": entry,
         "score": analysis["score"],
-        "level": analysis["level"],
+        "severity": analysis.get("severity", analysis["score"]),
+        "level": level,
         "summary": analysis["summary"],
         "recommendations": analysis["recommendations"],
         "factors": analysis["factors"],
+        "criteria": analysis.get("criteria"),
+        "criterion_scores": analysis.get("criterion_scores"),
+        "weights": analysis.get("weights"),
     }
 
 
@@ -136,7 +144,7 @@ DEMO_PAGE = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Demo inbox — Guardian highlight test</title>
+  <title>Demo inbox — NetRex highlight test</title>
   <style>
     body { font-family: Georgia, serif; max-width: 720px; margin: 40px auto; padding: 0 16px; line-height: 1.6; color: #1a1a1a; }
     .warn { background: #fff6e8; border-left: 4px solid #c9851a; padding: 12px 16px; }
@@ -189,7 +197,7 @@ else:
     @app.get("/")
     def root() -> dict[str, str]:
         return {
-            "service": "AI Cybersecurity Guardian",
+            "service": "NetRex",
             "docs": "/docs",
             "demo": "/demo/threat-page",
             "hint": "Build the admin app (cd admin && npm run build) to serve the dashboard here.",

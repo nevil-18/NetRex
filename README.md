@@ -1,6 +1,6 @@
-# AI Cybersecurity Guardian
+# NetRex
 
-Hackathon project: an AI-assisted cybersecurity tool that **blocks risky domains**, **highlights blacklisted URLs on pages**, and **scores phishing risk** for the current site.
+Hackathon project: an AI-assisted cybersecurity tool that **blocks risky domains**, **highlights blacklisted URLs on pages**, and **scores site severity %** from four weighted criteria.
 
 ```
 Chrome extension  ──►  FastAPI WebAPI  ──►  blacklist.json
@@ -28,7 +28,9 @@ Optional LLM enrichment:
 export OPENAI_API_KEY=sk-...
 ```
 
-Without a key, scoring still works via heuristics (blacklist, suspicious TLDs, brand bait, urgency language, password forms, etc.).
+Without a key, scoring still works via the same weighted heuristics (lookalike 35%, malicious scripts 30%, analyst judgement 20%, domain extension 15%). The model (when present) returns per-criterion scores only — the server multiplies by the weights.
+
+**Severity thresholds:** 0–29 low · 30–59 medium · 60–79 high · 80–100 critical (block, same as blacklist).
 
 ### 2. Admin console (port `8742`)
 

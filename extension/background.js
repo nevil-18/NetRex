@@ -41,6 +41,7 @@ async function analyzeUrl(url, html) {
 }
 
 function setBadge(tabId, level, blocked) {
+  // Benchmark: low / medium / high / critical (+ unknown)
   let text = "";
   let color = "#1f7a5c";
   if (blocked || level === "critical") {
@@ -54,10 +55,10 @@ function setBadge(tabId, level, blocked) {
     color = "#b8932e";
   } else if (level === "low") {
     text = "L";
-    color = "#4d8f74";
-  } else if (level === "safe") {
-    text = "OK";
     color = "#1f7a5c";
+  } else if (level === "unknown") {
+    text = "?";
+    color = "#6b7280";
   }
   chrome.action.setBadgeText({ tabId, text });
   chrome.action.setBadgeBackgroundColor({ tabId, color });
@@ -70,25 +71,31 @@ async function protectTab(tabId, url) {
 
   try {
     const result = await checkUrl(url);
+    const severity = result.severity ?? result.score;
+    const level = result.level || "unknown";
+    // Critical (80–100) blocks like the blacklist
+    const shouldBlock = Boolean(result.blocked) || level === "critical";
     tabState.set(tabId, {
       url,
       domain: result.domain,
-      blocked: result.blocked,
-      score: result.score,
-      level: result.level,
+      blocked: shouldBlock,
+      score: severity,
+      severity,
+      level,
       summary: result.summary,
       factors: result.factors || [],
       recommendations: result.recommendations || [],
+      criteria: result.criteria || null,
       entry: result.entry || null,
       updatedAt: Date.now(),
     });
-    setBadge(tabId, result.level, result.blocked);
+    setBadge(tabId, level, shouldBlock);
 
-    if (result.blocked) {
+    if (shouldBlock) {
       const blockedUrl =
         chrome.runtime.getURL("blocked.html") +
         `?domain=${encodeURIComponent(result.domain)}` +
-        `&score=${encodeURIComponent(result.score)}` +
+        `&score=${encodeURIComponent(severity ?? "")}` +
         `&reason=${encodeURIComponent(result.entry?.reason || result.summary || "")}` +
         `&target=${encodeURIComponent(url)}`;
       await chrome.tabs.update(tabId, { url: blockedUrl });

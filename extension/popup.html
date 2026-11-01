@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Guardian</title>
+    <title>NetRex</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
@@ -11,7 +11,17 @@
       <header class="top">
         <div>
           <p class="eyebrow">AI Cybersecurity</p>
-          <h1>Guardian</h1>
+          <h1 class="brand-headline" aria-label="NetRex">
+            <span id="brand-from" class="brand-headline__word">Guardian</span>
+            <span id="brand-to" class="brand-headline__word brand-headline__word--netrex" aria-hidden="true">
+              <span class="brand-headline__letter">N</span>
+              <span class="brand-headline__letter">e</span>
+              <span class="brand-headline__letter">t</span>
+              <span class="brand-headline__letter">R</span>
+              <span class="brand-headline__letter">e</span>
+              <span class="brand-headline__letter">x</span>
+            </span>
+          </h1>
         </div>
         <div id="status-pill" class="pill">Checking…</div>
       </header>
@@ -48,7 +58,7 @@
       </section>
 
       <section class="card">
-        <h2>Why this score</h2>
+        <h2>Criterion signals</h2>
         <ul id="factors" class="factors">
           <li class="muted">No signals yet.</li>
         </ul>

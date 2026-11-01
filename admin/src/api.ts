@@ -8,11 +8,20 @@ export type BlacklistEntry = {
   updated_at?: string;
 };
 
+export type CriterionResult = {
+  score: number;
+  confidence: "low" | "medium" | "high" | string;
+  evidence: string[];
+  impersonated_brand?: string | null;
+};
+
 export type AnalyzeResult = {
   domain: string;
   url: string;
   blocked: boolean;
-  score: number;
+  /** Final severity % (0–100), or null when unknown */
+  score: number | null;
+  severity: number | null;
   level: string;
   factors: string[];
   summary: string;
@@ -27,6 +36,11 @@ export type AnalyzeResult = {
     contexts: string[];
   }>;
   llm: boolean;
+  criteria?: Record<string, CriterionResult>;
+  criterion_scores?: Record<string, number>;
+  weights?: Record<string, number>;
+  prompt_injection_detected?: boolean;
+  injection_excerpt?: string | null;
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
