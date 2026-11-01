@@ -32,6 +32,13 @@ def model_reply(**overrides):
     return json.dumps(reply)
 
 
+def stub_model(monkeypatch, reply_text):
+    def call(message):
+        return gemini.GeminiReply(reply_text(message), "gemini-3.8-flash")
+
+    monkeypatch.setattr(ai_report, "call_model", call)
+
+
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
     path = tmp_path / "blacklist.json"
@@ -40,6 +47,8 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.setattr(report_store, "DATA_PATH", tmp_path / "reports.json")
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
     monkeypatch.delenv("GEMINI_MODEL", raising=False)
+    monkeypatch.delenv("GEMINI_FALLBACK_MODELS", raising=False)
+    monkeypatch.setattr(gemini, "_backoff", lambda: None)
 
 
 client = TestClient(app)
@@ -57,7 +66,7 @@ def test_prompts_come_from_the_prompt_file():
 
 
 def test_report_score_is_weighted_on_the_server(monkeypatch):
-    monkeypatch.setattr(ai_report, "call_model", lambda _: model_reply())
+    stub_model(monkeypatch, lambda _: model_reply())
     report = post_report()
     # 80*.35 + 40*.30 + 60*.20 + 20*.15 = 55
     assert report["severity"] == 55
@@ -78,11 +87,11 @@ def test_severity_bands(severity, level):
 
 def test_strong_signal_and_injection_overrides(monkeypatch):
     low = {"lookalike_domain": 0, "malicious_scripts": 0, "ai_judgement": 0, "domain_extension": 0}
-    monkeypatch.setattr(ai_report, "call_model", lambda _: model_reply(scores={**low, "domain_extension": 95}))
+    stub_model(monkeypatch, lambda _: model_reply(scores={**low, "domain_extension": 95}))
     assert post_report(url="https://a.example/")["severity"] == 70
 
     injected = model_reply(scores=low, prompt_injection_detected=True, injection_excerpt="ignore previous")
-    monkeypatch.setattr(ai_report, "call_model", lambda _: injected)
+    stub_model(monkeypatch, lambda _: injected)
     report = post_report(url="https://b.example/")
     assert report["severity"] == 60
     assert "ignore previous" in report["report"]
@@ -90,7 +99,7 @@ def test_strong_signal_and_injection_overrides(monkeypatch):
 
 def test_model_scores_are_clamped(monkeypatch):
     high = {"lookalike_domain": 500, "malicious_scripts": 500, "ai_judgement": 500, "domain_extension": 500}
-    monkeypatch.setattr(ai_report, "call_model", lambda _: model_reply(scores=high))
+    stub_model(monkeypatch, lambda _: model_reply(scores=high))
     assert post_report()["severity"] == 100
 
 
@@ -101,7 +110,7 @@ def test_bad_output_retries_once_then_reports_unknown_not_zero(monkeypatch):
         calls.append(message)
         return "not json"
 
-    monkeypatch.setattr(ai_report, "call_model", bad)
+    stub_model(monkeypatch, bad)
     report = post_report()
     assert len(calls) == 2
     assert report["severity"] is None
@@ -111,7 +120,7 @@ def test_bad_output_retries_once_then_reports_unknown_not_zero(monkeypatch):
 
 def test_retry_recovers_after_one_bad_reply(monkeypatch):
     replies = iter(["{}", model_reply()])
-    monkeypatch.setattr(ai_report, "call_model", lambda _: next(replies))
+    stub_model(monkeypatch, lambda _: next(replies))
     assert post_report()["severity"] == 55
 
 
@@ -157,7 +166,7 @@ def counting_model(monkeypatch):
         calls.append(message)
         return model_reply()
 
-    monkeypatch.setattr(ai_report, "call_model", reply)
+    stub_model(monkeypatch, reply)
     return calls
 
 
@@ -201,7 +210,7 @@ def test_saved_report_works_without_a_key_and_uses_current_blacklist(monkeypatch
 
 def test_failures_are_not_saved(monkeypatch):
     replies = iter(["bad", "bad", model_reply()])
-    monkeypatch.setattr(ai_report, "call_model", lambda _: next(replies))
+    stub_model(monkeypatch, lambda _: next(replies))
     assert post_report()["severity"] is None
     assert report_store.list_reports() == []
     assert post_report()["severity"] == 55
@@ -267,7 +276,7 @@ def test_admin_file_refuses_paths_outside_the_build(tmp_path):
 
 
 def test_infinite_score_counts_as_bad_output(monkeypatch):
-    monkeypatch.setattr(ai_report, "call_model", lambda _: '{"criteria": {"domain_extension": {"score": Infinity}}}')
+    stub_model(monkeypatch, lambda _: '{"criteria": {"domain_extension": {"score": Infinity}}}')
     assert post_report()["severity"] is None
 
 
@@ -347,28 +356,104 @@ def test_blocked_or_empty_replies_retry_then_report_unknown(monkeypatch, body):
     assert report["error"] == "Gemini returned an unusable response."
 
 
+MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]
+
+
+def scripted_gemini(monkeypatch, status_for_model):
+    """Fake Gemini: a model listed here fails with that status; the rest succeed."""
+    calls = []
+
+    def fake_post(url, headers, json, timeout):
+        model = url.rsplit("/", 1)[1].split(":")[0]
+        calls.append(model)
+        status = status_for_model.get(model)
+        if status:
+            return httpx.Response(status, text="secret detail", request=httpx.Request("POST", url))
+        return gemini_response(url, {"candidates": [{"content": {"parts": [{"text": model_reply()}]}}]})
+
+    monkeypatch.setattr(gemini.httpx, "post", fake_post)
+    return calls
+
+
 @pytest.mark.parametrize(
     ("status", "calls_made", "message"),
     [
-        (429, 1, "rate limit"),
-        (400, 1, "Check GEMINI_API_KEY"),
-        (403, 1, "Check GEMINI_API_KEY"),
-        (503, 2, "HTTP 503"),
+        (429, MODELS, "rate limit"),
+        (400, MODELS[:1], "Check GEMINI_API_KEY"),
+        (403, MODELS[:1], "Check GEMINI_API_KEY"),
+        (503, [m for m in MODELS for _ in range(2)], "HTTP 503"),
     ],
 )
 def test_provider_errors_report_unknown_without_leaking_details(monkeypatch, status, calls_made, message):
+    calls = scripted_gemini(monkeypatch, dict.fromkeys(MODELS, status))
+    report = post_report()
+    assert calls == calls_made
+    assert report["severity"] is None
+    assert message in report["error"]
+    assert "secret" not in report["error"]
+    assert report_store.list_reports() == []
+
+
+def test_overloaded_model_falls_back_and_report_names_the_model_used(monkeypatch):
+    calls = scripted_gemini(monkeypatch, {"gemini-3.8-flash": 503})
+    report = post_report()
+    assert calls == ["gemini-3.8-flash", "gemini-3.8-flash", "gemini-3.6-flash"]
+    assert report["severity"] == 55
+    assert report["model"] == "gemini-3.6-flash"
+    assert report_store.list_reports()[0]["model"] == "gemini-3.6-flash"
+
+
+def test_one_503_recovers_on_the_same_model(monkeypatch):
+    results = iter([503])
     calls = []
 
     def fake_post(url, headers, json, timeout):
         calls.append(url)
-        return httpx.Response(status, text="secret detail", request=httpx.Request("POST", url))
+        status = next(results, None)
+        if status:
+            return httpx.Response(status, request=httpx.Request("POST", url))
+        return gemini_response(url, {"candidates": [{"content": {"parts": [{"text": model_reply()}]}}]})
 
     monkeypatch.setattr(gemini.httpx, "post", fake_post)
-    report = post_report()
-    assert len(calls) == calls_made
-    assert report["severity"] is None
-    assert message in report["error"]
-    assert "secret" not in report["error"]
+    assert post_report()["model"] == "gemini-3.8-flash"
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize("status", [429, 404])
+def test_quota_or_missing_model_moves_on_without_waiting(monkeypatch, status):
+    waits = []
+    monkeypatch.setattr(gemini, "_backoff", lambda: waits.append(1))
+    calls = scripted_gemini(monkeypatch, {"gemini-3.8-flash": status})
+    assert post_report()["model"] == "gemini-3.6-flash"
+    assert calls == MODELS[:2]
+    assert waits == []
+
+
+def test_timeouts_also_fall_back(monkeypatch):
+    def fake_post(url, headers, json, timeout):
+        if "3.8" in url:
+            raise httpx.ReadTimeout("slow")
+        return gemini_response(url, {"candidates": [{"content": {"parts": [{"text": model_reply()}]}}]})
+
+    monkeypatch.setattr(gemini.httpx, "post", fake_post)
+    assert post_report()["model"] == "gemini-3.6-flash"
+
+
+def test_stops_retrying_at_the_deadline(monkeypatch):
+    calls = scripted_gemini(monkeypatch, dict.fromkeys(MODELS, 503))
+    with pytest.raises(httpx.HTTPStatusError):
+        clock = iter([0, 1, 1000, 1000, 1000, 1000, 1000])
+        monkeypatch.setattr(gemini.time, "monotonic", lambda: next(clock))
+        gemini.generate_json("s", "u", 10)
+    assert len(calls) == 1
+
+
+def test_fallback_list_can_be_changed_with_env(monkeypatch):
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-3.6-flash")
+    monkeypatch.setenv("GEMINI_FALLBACK_MODELS", "gemini-3.6-flash, other-model,")
+    assert gemini.models() == ["gemini-3.6-flash", "other-model"]
+    monkeypatch.setenv("GEMINI_FALLBACK_MODELS", "")
+    assert gemini.models() == ["gemini-3.6-flash"]
 
 
 def test_deep_analyze_uses_gemini(monkeypatch):

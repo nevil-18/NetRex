@@ -239,8 +239,8 @@ def _sentence(text: str) -> str:
     return text if text.endswith((".", "!", "?")) else f"{text}."
 
 
-def call_model(user_message: str) -> str:
-    """Send the prompt to the AI model and return the raw reply text."""
+def call_model(user_message: str) -> gemini.GeminiReply:
+    """Send the prompt to the AI model and return its reply."""
     return gemini.generate_json(SYSTEM_PROMPT, user_message, MODEL_TIMEOUT_SECONDS)
 
 
@@ -251,7 +251,7 @@ def _describe_failure(exc: Exception) -> str:
             return "The Gemini free-tier rate limit was reached. Try again in a minute."
         if code in {400, 401, 403, 404}:
             return f"Gemini returned HTTP {code}. Check GEMINI_API_KEY and GEMINI_MODEL."
-        return f"Gemini returned HTTP {code}."
+        return f"Gemini is overloaded on every model tried (HTTP {code}). This is usually temporary."
     if isinstance(exc, httpx.TimeoutException):
         return "Gemini timed out."
     if isinstance(exc, httpx.HTTPError):
@@ -304,18 +304,19 @@ def generate_report(url: str, html: str | None) -> dict[str, Any]:
     failure: Exception | None = None
     for _attempt in range(2):
         try:
-            result = severity_from_model(call_model(message))
-        except (httpx.HTTPError, KeyError, IndexError, TypeError, AttributeError, ValueError) as exc:
-            failure = exc
-            # Retrying a bad key or a used-up quota would fail the same way.
-            if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code < 500:
-                break
+            reply = call_model(message)
+            result = severity_from_model(reply.text)
+        except httpx.HTTPError as exc:
+            failure = exc  # the Gemini client has already retried these
+            break
+        except (KeyError, IndexError, TypeError, AttributeError, ValueError) as exc:
+            failure = exc  # an unusable reply may be fine on a second try
             continue
         report = {
             **base,
             **result,
             "report": build_description(result),
-            "model": gemini.model_name(),
+            "model": reply.model,
             "error": None,
         }
         report_store.save(page_url, report)

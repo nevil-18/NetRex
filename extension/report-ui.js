@@ -142,7 +142,7 @@
   }
 
   function showResult(report) {
-    hasReport = true;
+    hasReport = report.severity != null; // the popup's Report button retries failures
     if (report.severity == null) {
       showToast({
         title: "Risk report unavailable",

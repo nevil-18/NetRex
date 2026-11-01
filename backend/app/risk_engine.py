@@ -92,10 +92,10 @@ async def _llm_enrich(domain: str, html_excerpt: str, base: dict[str, Any]) -> d
             f"Heuristic factors: {base.get('factors')}\n"
             f"Page excerpt:\n{html_excerpt[:2500]}"
         )
-        content = await asyncio.to_thread(
+        reply = await asyncio.to_thread(
             gemini.generate_json, "Return JSON only.", prompt, LLM_TIMEOUT_SECONDS
         )
-        parsed = json.loads(content)
+        parsed = json.loads(reply.text)
         score = _clamp(int(parsed.get("score", base["score"])))
         factors = list(parsed.get("factors") or [])[:4]
         summary = str(parsed.get("summary") or "").strip()

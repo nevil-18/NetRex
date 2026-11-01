@@ -63,7 +63,7 @@ function render(report) {
   byId("domain").textContent = report.domain;
   if (report.severity == null) {
     showNotice(report.error || "The page could not be scored.");
-    byId("meta").textContent = "An unknown result is not a safe result. Treat this page with care.";
+    byId("meta").textContent = "An unknown result is not a safe result. Treat this page with care. Reload the page to try again.";
     return;
   }
 
