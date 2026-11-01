@@ -56,7 +56,7 @@ function renderCriteria(criteria) {
 function render(report) {
   if (!report) {
     byId("domain").textContent = "No report yet";
-    showNotice("This page has no risk report yet. Use the Report button in the Guardian popup.");
+    showNotice("This page has no risk report yet. Use the Report button in the NetRex popup.");
     return;
   }
 
@@ -73,7 +73,7 @@ function render(report) {
   byId("meter-fill").style.width = `${report.severity}%`;
   byId("meter").setAttribute("aria-label", `Risk score ${report.severity} percent`);
 
-  if (report.on_blacklist) showNotice("This domain is on your Guardian blacklist.");
+  if (report.on_blacklist) showNotice("This domain is on your NetRex blacklist.");
   renderDescription(report.report);
   renderCriteria(report.criteria);
 

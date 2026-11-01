@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parent.parent
 ADMIN_DIST = ROOT.parent / "admin" / "dist"
 
 app = FastAPI(
-    title="AI Cybersecurity Guardian",
-    description="WebAPI for the Guardian Chrome extension and admin console.",
+    title="NetRex",
+    description="WebAPI for the NetRex Chrome extension and admin console.",
     version="1.0.0",
 )
 
@@ -66,7 +66,7 @@ class ReportIn(BaseModel):
 def health() -> dict[str, Any]:
     return {
         "ok": True,
-        "service": "AI Cybersecurity Guardian",
+        "service": "NetRex",
         "blacklist": blacklist_store.stats(),
     }
 
@@ -168,7 +168,7 @@ DEMO_PAGE = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Demo inbox — Guardian highlight test</title>
+  <title>Demo inbox — NetRex highlight test</title>
   <style>
     body { font-family: Georgia, serif; max-width: 720px; margin: 40px auto; padding: 0 16px; line-height: 1.6; color: #1a1a1a; }
     .warn { background: #fff6e8; border-left: 4px solid #c9851a; padding: 12px 16px; }
@@ -230,7 +230,7 @@ else:
     @app.get("/")
     def root() -> dict[str, str]:
         return {
-            "service": "AI Cybersecurity Guardian",
+            "service": "NetRex",
             "docs": "/docs",
             "demo": "/demo/threat-page",
             "hint": "Build the admin app (cd admin && npm run build) to serve the dashboard here.",

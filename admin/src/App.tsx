@@ -10,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { api, type AnalyzeResult, type BlacklistEntry, type SavedReport, type Severity } from "./api";
-import { Panel, RiskGauge, SeverityBadge } from "./components";
+import { BrandHeadline, Panel, RiskGauge, SeverityBadge } from "./components";
 
 export default function App() {
   const [domains, setDomains] = useState<BlacklistEntry[]>([]);
@@ -143,19 +143,26 @@ export default function App() {
   return (
     <div className="relative mx-auto min-h-svh max-w-6xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
       <header className="animate-rise mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div>
+        <div className="brand-lockup">
           <div className="mb-3 inline-flex items-center gap-2 text-[var(--signal)]">
             <span className="pulse-dot relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--signal)]" />
             <span className="text-xs font-semibold uppercase tracking-[0.22em]">
               Live protection console
             </span>
           </div>
-          <h1 className="font-[family-name:var(--font-display)] text-5xl font-extrabold leading-[0.95] tracking-tight text-[var(--ink)] sm:text-6xl">
-            Guardian
-          </h1>
-          <p className="mt-3 max-w-xl text-base text-[var(--ink-soft)] sm:text-lg">
-            Block risky domains, score phishing risk, and feed the Chrome
-            extension in real time.
+          <BrandHeadline />
+          <p className="pitch-line" aria-label="Stop phishing on sites and email, score severity, protect in real time">
+            <span className="pitch-line__phrase">
+              Stop <em>phishing</em> on sites &amp; email
+            </span>
+            <span className="pitch-line__sep" aria-hidden="true" />
+            <span className="pitch-line__phrase">
+              Score <em>severity %</em>
+            </span>
+            <span className="pitch-line__sep" aria-hidden="true" />
+            <span className="pitch-line__phrase">
+              Protect in <em>real time</em>
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-3 self-start rounded-xl border border-[var(--line)] bg-white/70 px-4 py-3 backdrop-blur md:self-auto">
@@ -217,7 +224,7 @@ export default function App() {
                 Blacklist
               </h2>
               <p className="mt-1 text-sm text-[var(--ink-soft)]">
-                Domains here are blocked by the extension and highlighted in red
+                Domains here are blocked by NetRex and highlighted in red
                 wherever they appear.
               </p>
             </div>
@@ -403,7 +410,7 @@ export default function App() {
               </div>
             ) : (
               <div className="mt-8 rounded-xl border border-dashed border-[var(--line)] px-4 py-10 text-center text-sm text-[var(--ink-soft)]">
-                Run an analysis to see the risk score, factors, and guidance.
+                Run an analysis to see severity %, factors, and guidance.
               </div>
             )}
           </Panel>
@@ -414,17 +421,16 @@ export default function App() {
             </h2>
             <ol className="mt-3 space-y-3 text-sm leading-relaxed text-[#b7cdc3]">
               <li>
-                <span className="font-semibold text-[var(--amber-soft)]">1.</span> Extension
-                asks <code className="text-[#e8f0ec]">/api/check</code> on every navigation.
+                <span className="font-semibold text-[var(--amber-soft)]">1.</span>{" "}
+                <code className="text-[#e8f0ec]">/api/check</code> on navigation
               </li>
               <li>
-                <span className="font-semibold text-[var(--amber-soft)]">2.</span> Blocked
-                hosts get an interstitial; page HTML is scanned via{" "}
-                <code className="text-[#e8f0ec]">/api/scan</code>.
+                <span className="font-semibold text-[var(--amber-soft)]">2.</span> Block +{" "}
+                <code className="text-[#e8f0ec]">/api/scan</code>
               </li>
               <li>
-                <span className="font-semibold text-[var(--amber-soft)]">3.</span> Matches are
-                painted red in-page; popup shows the live risk score.
+                <span className="font-semibold text-[var(--amber-soft)]">3.</span> Highlights +
+                live severity
               </li>
             </ol>
           </Panel>
@@ -451,6 +457,25 @@ export default function App() {
             <Trash2 className="h-4 w-4" />
             Purge all
           </button>
+        </div>
+
+        <div className="analyzer-tagline" aria-label="Severity thresholds">
+          <span className="analyzer-tag analyzer-tag--low">
+            <span className="analyzer-tag__range">0–29</span>
+            <span className="analyzer-tag__label">low</span>
+          </span>
+          <span className="analyzer-tag analyzer-tag--medium">
+            <span className="analyzer-tag__range">30–59</span>
+            <span className="analyzer-tag__label">medium</span>
+          </span>
+          <span className="analyzer-tag analyzer-tag--high">
+            <span className="analyzer-tag__range">60–79</span>
+            <span className="analyzer-tag__label">high</span>
+          </span>
+          <span className="analyzer-tag analyzer-tag--critical">
+            <span className="analyzer-tag__range">80–100</span>
+            <span className="analyzer-tag__label">critical</span>
+          </span>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-[var(--line)]">

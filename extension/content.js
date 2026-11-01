@@ -1,6 +1,6 @@
 (() => {
-  const STYLE_ATTR = "data-guardian-highlight";
-  const UI_HOST_ID = "guardian-report-ui";
+  const STYLE_ATTR = "data-netrex-highlight";
+  const UI_HOST_ID = "netrex-report-ui";
   let lastHighlights = [];
   let observerTimer = null;
 
@@ -12,9 +12,9 @@
       parent.replaceChild(document.createTextNode(text || ""), el);
       parent.normalize();
     });
-    document.querySelectorAll("a.guardian-link-flag").forEach((a) => {
-      a.classList.remove("guardian-link-flag");
-      a.removeAttribute("data-guardian-domain");
+    document.querySelectorAll("a.netrex-link-flag").forEach((a) => {
+      a.classList.remove("netrex-link-flag");
+      a.removeAttribute("data-netrex-domain");
       a.removeAttribute("title");
     });
   }
@@ -72,8 +72,8 @@
         }
         const mark = document.createElement("mark");
         mark.setAttribute(STYLE_ATTR, severity || "high");
-        mark.className = `guardian-mark guardian-${severity || "high"}`;
-        mark.title = `Guardian: blacklisted domain (${domain})`;
+        mark.className = `netrex-mark netrex-${severity || "high"}`;
+        mark.title = `NetRex: blacklisted domain (${domain})`;
         mark.textContent = match[0];
         frag.appendChild(mark);
         cursor = match.index + match[0].length;
@@ -86,9 +86,9 @@
 
     document.querySelectorAll("a[href]").forEach((a) => {
       if (linkPointsTo(a, needle)) {
-        a.classList.add("guardian-link-flag");
-        a.setAttribute("data-guardian-domain", domain);
-        a.title = `Guardian warning: link points to blacklisted domain ${domain}`;
+        a.classList.add("netrex-link-flag");
+        a.setAttribute("data-netrex-domain", domain);
+        a.title = `NetRex warning: link points to blacklisted domain ${domain}`;
       }
     });
   }
@@ -148,7 +148,7 @@
           (n) =>
             n.id !== UI_HOST_ID &&
             !(n.nodeType === 1 && n.hasAttribute?.(STYLE_ATTR)) &&
-            !(n.nodeType === 1 && n.classList?.contains("guardian-link-flag")),
+            !(n.nodeType === 1 && n.classList?.contains("netrex-link-flag")),
         );
       });
       if (relevant) scheduleScan();

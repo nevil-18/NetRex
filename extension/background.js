@@ -75,9 +75,9 @@ async function saveReport(tabId, url, report) {
   });
 }
 
-// Guardian's own dashboard and API docs aren't worth a Gemini request. The demo
+// NetRex's own dashboard and API docs aren't worth a Gemini request. The demo
 // threat page is served from the same place but exists to be scored.
-function isGuardianPage(url) {
+function isNetRexPage(url) {
   const { hostname, port, pathname } = new URL(url);
   return (
     ["127.0.0.1", "localhost"].includes(hostname) &&
@@ -87,7 +87,7 @@ function isGuardianPage(url) {
 }
 
 async function shouldRunReport(url, manual) {
-  if (isGuardianPage(url)) return false;
+  if (isNetRexPage(url)) return false;
   if (!manual) {
     const { autoReport } = await chrome.storage.sync.get(["autoReport"]);
     if (autoReport === false) return false;

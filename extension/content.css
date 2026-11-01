@@ -1,4 +1,4 @@
-mark.guardian-mark {
+mark.netrex-mark {
   background: rgba(232, 75, 58, 0.22);
   color: #7f1d14;
   border-bottom: 2px solid #e84b3a;
@@ -8,23 +8,23 @@ mark.guardian-mark {
   -webkit-box-decoration-break: clone;
 }
 
-mark.guardian-critical {
+mark.netrex-critical {
   background: rgba(232, 75, 58, 0.35);
   box-shadow: 0 0 0 1px rgba(232, 75, 58, 0.35);
 }
 
-mark.guardian-high {
+mark.netrex-high {
   background: rgba(232, 75, 58, 0.22);
 }
 
-mark.guardian-medium,
-mark.guardian-low {
+mark.netrex-medium,
+mark.netrex-low {
   background: rgba(201, 133, 26, 0.2);
   color: #6b4508;
   border-bottom-color: #c9851a;
 }
 
-a.guardian-link-flag {
+a.netrex-link-flag {
   outline: 2px solid #e84b3a !important;
   outline-offset: 2px;
   background: rgba(232, 75, 58, 0.08) !important;

@@ -1,4 +1,4 @@
-# AI Cybersecurity Guardian
+# NetRex
 
 Hackathon project: an AI-assisted cybersecurity tool that **blocks risky domains**, **highlights blacklisted URLs on pages**, and **scores phishing risk** for the current site.
 
@@ -30,7 +30,7 @@ export GEMINI_API_KEY=your-key
 
 The default model is `gemini-3.8-flash`. Set `GEMINI_MODEL` to use another, such as `gemini-3.5-flash-lite`.
 
-Gemini sometimes answers `503` when a model is overloaded, especially on the free tier. Guardian waits and retries, then tries `gemini-3.6-flash` and `gemini-3.5-flash-lite`, and each report names the model that produced it. Set `GEMINI_FALLBACK_MODELS` to a comma-separated list to change the fallbacks, or leave it empty for none.
+Gemini sometimes answers `503` when a model is overloaded, especially on the free tier. NetRex waits and retries, then tries `gemini-3.6-flash` and `gemini-3.5-flash-lite`, and each report names the model that produced it. Set `GEMINI_FALLBACK_MODELS` to a comma-separated list to change the fallbacks, or leave it empty for none.
 
 Without a key, the popup's heuristic score still works (blacklist, suspicious TLDs, brand bait, urgency language, password forms, etc.), but risk reports show as unavailable.
 

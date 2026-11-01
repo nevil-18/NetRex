@@ -1,6 +1,26 @@
 import type { ReactNode } from "react";
 import type { Severity } from "./api";
 
+export function BrandHeadline({ className = "" }: { className?: string }) {
+  return (
+    <h1
+      className={`brand-headline font-[family-name:var(--font-display)] text-5xl font-extrabold leading-[0.95] tracking-tight text-[var(--ink)] sm:text-6xl ${className}`}
+      aria-label="NetRex"
+    >
+      {"NetRex".split("").map((ch, i) => (
+        <span
+          key={`${ch}-${i}`}
+          className="brand-headline__letter"
+          style={{ animationDelay: `${i * 55}ms` }}
+          aria-hidden="true"
+        >
+          {ch}
+        </span>
+      ))}
+    </h1>
+  );
+}
+
 export function SeverityBadge({ severity }: { severity: Severity | string }) {
   const map: Record<string, string> = {
     critical: "bg-[#e84b3a] text-white",
@@ -79,7 +99,7 @@ export function RiskGauge({ score, level }: { score: number; level: string }) {
           {clamped}
         </div>
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-soft)]">
-          {level} risk
+          {level} · {clamped}%
         </div>
       </div>
     </div>

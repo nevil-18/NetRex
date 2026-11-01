@@ -1,4 +1,4 @@
-# Guardian architecture & modularity
+# NetRex architecture & modularity
 
 This document explains how the project is split into modules, what talks to what, and whether the dashboard can change server state without going through the WebAPI.
 

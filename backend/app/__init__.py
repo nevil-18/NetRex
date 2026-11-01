@@ -1,1 +1,1 @@
-"""AI Cybersecurity Guardian backend."""
+"""NetRex backend."""

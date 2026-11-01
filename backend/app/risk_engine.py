@@ -137,7 +137,7 @@ def heuristic_analyze(url: str, html: str | None = None) -> dict[str, Any]:
         bump = {"critical": 98, "high": 88, "medium": 72, "low": 55}.get(sev, 88)
         score = max(score, bump)
         factors.append(
-            f"Domain is on the Guardian blacklist ({sev}): {blocked_entry.get('reason', '')}"
+            f"Domain is on the NetRex blacklist ({sev}): {blocked_entry.get('reason', '')}"
         )
 
     # IP literal host
@@ -251,7 +251,7 @@ def _summary(domain: str, score: int, blocked_entry: dict | None, factors: list[
     level = _level(score)
     if blocked_entry:
         return (
-            f"{domain} is blocked by Guardian ({blocked_entry.get('severity', 'high')}). "
+            f"{domain} is blocked by NetRex ({blocked_entry.get('severity', 'high')}). "
             f"{blocked_entry.get('reason', '')}".strip()
         )
     if level in {"critical", "high"}:

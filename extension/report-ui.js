@@ -1,5 +1,5 @@
 (() => {
-  const HOST_ID = "guardian-report-ui";
+  const HOST_ID = "netrex-report-ui";
   const LOW_TOAST_MS = 10000;
   const FAILED_TOAST_MS = 8000;
   // Saved reports return almost at once, so they skip the "generating" toast.
@@ -130,7 +130,7 @@
     if (frameEl) return;
     const frame = document.createElement("iframe");
     frame.className = "frame";
-    frame.title = "Guardian risk report";
+    frame.title = "NetRex risk report";
     frame.src = chrome.runtime.getURL("report.html");
     frame.addEventListener("load", () => frame.focus());
     ensureRoot().appendChild(frame);
@@ -192,7 +192,7 @@
       if (manual || toastEl) {
         showToast({
           title: "Risk report unavailable",
-          detail: "The Guardian server could not be reached.",
+          detail: "The NetRex server could not be reached.",
           timeoutMs: FAILED_TOAST_MS,
         });
       }

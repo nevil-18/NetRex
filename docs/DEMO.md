@@ -9,7 +9,7 @@
 ## Script
 
 1. **Block (30s)** — Paste `https://paypal-verify-account.net` in the address bar.  
-   Guardian interstitial appears with domain + risk score.
+   NetRex interstitial appears with domain + risk score.
 
 2. **Highlight (45s)** — Show the demo threat page: blacklisted domains are painted red; phishing links are outlined.
 

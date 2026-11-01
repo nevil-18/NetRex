@@ -298,7 +298,7 @@ def generate_report(url: str, html: str | None) -> dict[str, Any]:
         "cached": False,
     }
     if not gemini.api_key():
-        return _unknown(base, "GEMINI_API_KEY is not set on the Guardian server.")
+        return _unknown(base, "GEMINI_API_KEY is not set on the NetRex server.")
 
     message = build_user_message(url, html or "", on_blacklist)
     failure: Exception | None = None

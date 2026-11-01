@@ -1,5 +1,5 @@
 {
-  "name": "ai-cybersecurity-guardian",
+  "name": "netrex",
   "private": true,
   "version": "1.0.0",
   "description": "Hackathon: Chrome extension + FastAPI + admin console for phishing defense",
