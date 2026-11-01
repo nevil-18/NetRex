@@ -1,0 +1,66 @@
+url,label,category,note
+http://paypa1-secure-login.xyz/verify,1,lookalike_tld,digit-for-letter lookalike on a cheap TLD
+http://login.microsoft.com.evil-site.ru/,1,brand_in_subdomain,real brand placed as a subdomain of another domain
+http://203.0.113.7/signin,1,ip_host,raw IP address login page
+https://apple-id-verify.top/account/unlock,1,lookalike_tld,brand + bait words on a cheap TLD
+http://amazon-order-problem.click/pay,1,lookalike_tld,brand + payment lure
+https://netflix-billing-update.tk/login,1,lookalike_tld,brand + billing lure
+http://secure.chase-online-verify.ml/signin,1,lookalike_tld,bank lookalike
+https://wellsfargo-alert.buzz/confirm,1,lookalike_tld,bank lookalike
+http://dhl-parcel-fee.work/track,1,lookalike_tld,delivery-fee lure
+https://irs-refund-claim.win/form,1,lookalike_tld,tax-refund lure
+http://coinbase-wallet-support.xyz/recover,1,lookalike_tld,crypto support lure
+https://metamask-verify-wallet.top/connect,1,lookalike_tld,wallet lure
+http://facebook-security-check.ga/login,1,lookalike_tld,social login lure
+https://instagram-copyright-appeal.gq/form,1,lookalike_tld,social appeal lure
+http://free-prize-winner-2026.cf/claim,1,prize_lure,prize lure
+https://whatsapp-web-update.zip/login,1,lookalike_tld,.zip TLD lure
+http://account-suspended-notice.loan/verify,1,generic_bait,generic account lure
+https://update-your-password.stream/login,1,generic_bait,generic password lure
+https://paypal.com.account-verify.info/signin,1,brand_in_subdomain,brand.com used as a subdomain
+http://appleid.apple.com.verify-session.xyz/,1,brand_in_subdomain,brand domain as subdomain
+https://support-amazon.com-orders.top/,1,brand_in_subdomain,brand name inside a different domain
+http://g00gle-account-recovery.com/,1,lookalike_clean_tld,zeros for letters on a normal TLD
+https://rnicrosoft-support.com/,1,lookalike_clean_tld,rn looks like m
+https://secure-login.microsoftonline-verify.com/,1,lookalike_clean_tld,brand-like domain on a normal TLD
+https://secure-document-share.com/login,1,generic_clean_tld,bait words only
+https://my-account-portal.com/signin,1,generic_clean_tld,bait words only
+https://login-verify-support.net/update,1,generic_clean_tld,bait words only
+https://xn--pypal-4ve.com/login,1,punycode,punycode lookalike (hard case)
+https://sites.google.com/view/account-verify-form,1,trusted_platform,phishing page hosted on a trusted platform (hard case)
+https://docs.google.com/forms/d/e/1FAIpQLSexample/viewform,1,trusted_platform,phishing form on a trusted platform (hard case)
+https://www.google.com/search?q=weather,0,popular,
+https://mail.google.com/mail/u/0/,0,brand_subdomain,legit subdomain of a big brand
+https://docs.google.com/document/d/abc123/edit,0,brand_subdomain,legit subdomain of a big brand
+https://accounts.google.com/signin,0,brand_login,legit login page
+https://myaccount.google.com/security,0,brand_login,legit account page
+https://github.com/login,0,brand_login,legit login page
+https://en.wikipedia.org/wiki/Phishing,0,popular,page about phishing
+https://www.amazon.com/,0,popular,
+https://aws.amazon.com/,0,brand_subdomain,legit subdomain of a big brand
+https://login.microsoftonline.com/,0,brand_login,legit login page
+https://login.live.com/,0,brand_login,legit login page
+https://www.paypal.com/signin,0,brand_login,legit login page
+https://www.facebook.com/login,0,brand_login,legit login page
+https://www.instagram.com/accounts/login/,0,brand_login,legit login page
+https://www.netflix.com/login,0,brand_login,legit login page
+https://www.coinbase.com/signin,0,brand_login,legit login page
+https://secure.bankofamerica.com/login/sign-in/signOn.go,0,brand_login,legit bank login
+https://signin.ebay.com/,0,brand_login,legit login page
+https://www.dropbox.com/login,0,brand_login,legit login page
+https://slack.com/signin,0,brand_login,legit login page
+https://support.apple.com/,0,brand_subdomain,legit support site
+https://www.wellsfargo.com/,0,popular,
+https://www.irs.gov/refunds,0,gov,legit tax site
+https://www.dhl.com/us-en/home/tracking.html,0,popular,
+https://www.fedex.com/en-us/tracking.html,0,popular,
+https://www.ups.com/track,0,popular,
+https://www.troy.edu/,0,edu,
+https://www.hufs.ac.kr/,0,edu,
+https://www.nytimes.com/,0,popular,
+https://stackoverflow.com/questions/11227809,0,popular,
+https://developer.mozilla.org/en-US/docs/Web,0,popular,
+https://zoom.us/j/123456789,0,popular,
+https://news.ycombinator.com/,0,popular,
+https://www.reddit.com/login,0,popular,
+http://example.com/,0,http_benign,plain http but harmless

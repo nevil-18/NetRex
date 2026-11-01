@@ -1,0 +1,66 @@
+url,label,category,score,level,factors
+http://paypa1-secure-login.xyz/verify,1,lookalike_tld,54,medium,Suspicious top-level domain .xyz | Domain contains common phishing bait words (login/verify/secure) | Page is served over insecure HTTP
+http://login.microsoft.com.evil-site.ru/,1,brand_in_subdomain,72,high,Unusually deep subdomain chain | Domain appears to impersonate “microsoft” | Domain contains common phishing bait words (login/verify/secure)
+http://203.0.113.7/signin,1,ip_host,65,high,Uses a raw IP address instead of a domain name | Unusually deep subdomain chain | Page is served over insecure HTTP
+https://apple-id-verify.top/account/unlock,1,lookalike_tld,74,high,Suspicious top-level domain .top | Brand keyword “apple” used in a non-official domain | Domain contains common phishing bait words (login/verify/secure)
+http://amazon-order-problem.click/pay,1,lookalike_tld,70,high,Suspicious top-level domain .click | Brand keyword “amazon” used in a non-official domain | Page is served over insecure HTTP
+https://netflix-billing-update.tk/login,1,lookalike_tld,74,high,Suspicious top-level domain .tk | Brand keyword “netflix” used in a non-official domain | Domain contains common phishing bait words (login/verify/secure)
+http://secure.chase-online-verify.ml/signin,1,lookalike_tld,82,high,Suspicious top-level domain .ml | Domain appears to impersonate “chase” | Domain contains common phishing bait words (login/verify/secure)
+https://wellsfargo-alert.buzz/confirm,1,lookalike_tld,60,medium,Suspicious top-level domain .buzz | Brand keyword “wellsfargo” used in a non-official domain
+http://dhl-parcel-fee.work/track,1,lookalike_tld,70,high,Suspicious top-level domain .work | Brand keyword “dhl” used in a non-official domain | Page is served over insecure HTTP
+https://irs-refund-claim.win/form,1,lookalike_tld,60,medium,Suspicious top-level domain .win | Brand keyword “irs” used in a non-official domain
+http://coinbase-wallet-support.xyz/recover,1,lookalike_tld,84,high,Suspicious top-level domain .xyz | Brand keyword “coinbase” used in a non-official domain | Domain contains common phishing bait words (login/verify/secure)
+https://metamask-verify-wallet.top/connect,1,lookalike_tld,74,high,Suspicious top-level domain .top | Brand keyword “metamask” used in a non-official domain | Domain contains common phishing bait words (login/verify/secure)
+http://facebook-security-check.ga/login,1,lookalike_tld,70,high,Suspicious top-level domain .ga | Brand keyword “facebook” used in a non-official domain | Page is served over insecure HTTP
+https://instagram-copyright-appeal.gq/form,1,lookalike_tld,60,medium,Suspicious top-level domain .gq | Brand keyword “instagram” used in a non-official domain
+http://free-prize-winner-2026.cf/claim,1,prize_lure,40,medium,Suspicious top-level domain .cf | Page is served over insecure HTTP
+https://whatsapp-web-update.zip/login,1,lookalike_tld,74,high,Suspicious top-level domain .zip | Brand keyword “whatsapp” used in a non-official domain | Domain contains common phishing bait words (login/verify/secure)
+http://account-suspended-notice.loan/verify,1,generic_bait,54,medium,Suspicious top-level domain .loan | Domain contains common phishing bait words (login/verify/secure) | Page is served over insecure HTTP
+https://update-your-password.stream/login,1,generic_bait,44,medium,Suspicious top-level domain .stream | Domain contains common phishing bait words (login/verify/secure)
+https://paypal.com.account-verify.info/signin,1,brand_in_subdomain,64,medium,Unusually deep subdomain chain | Brand keyword “paypal” used in a non-official domain | Domain contains common phishing bait words (login/verify/secure)
+http://appleid.apple.com.verify-session.xyz/,1,brand_in_subdomain,96,critical,Suspicious top-level domain .xyz | Unusually deep subdomain chain | Brand keyword “apple” used in a non-official domain
+https://support-amazon.com-orders.top/,1,brand_in_subdomain,74,high,Suspicious top-level domain .top | Brand keyword “amazon” used in a non-official domain | Domain contains common phishing bait words (login/verify/secure)
+http://g00gle-account-recovery.com/,1,lookalike_clean_tld,32,low,Domain contains common phishing bait words (login/verify/secure) | Page is served over insecure HTTP
+https://rnicrosoft-support.com/,1,lookalike_clean_tld,22,low,Domain contains common phishing bait words (login/verify/secure)
+https://secure-login.microsoftonline-verify.com/,1,lookalike_clean_tld,50,medium,Domain appears to impersonate “microsoft” | Domain contains common phishing bait words (login/verify/secure)
+https://secure-document-share.com/login,1,generic_clean_tld,22,low,Domain contains common phishing bait words (login/verify/secure)
+https://my-account-portal.com/signin,1,generic_clean_tld,22,low,Domain contains common phishing bait words (login/verify/secure)
+https://login-verify-support.net/update,1,generic_clean_tld,22,low,Domain contains common phishing bait words (login/verify/secure)
+https://xn--pypal-4ve.com/login,1,punycode,8,safe,No strong phishing indicators detected by heuristics
+https://sites.google.com/view/account-verify-form,1,trusted_platform,36,low,Domain appears to impersonate “google”
+https://docs.google.com/forms/d/e/1FAIpQLSexample/viewform,1,trusted_platform,36,low,Domain appears to impersonate “google”
+https://www.google.com/search?q=weather,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://mail.google.com/mail/u/0/,0,brand_subdomain,36,low,Domain appears to impersonate “google”
+https://docs.google.com/document/d/abc123/edit,0,brand_subdomain,36,low,Domain appears to impersonate “google”
+https://accounts.google.com/signin,0,brand_login,50,medium,Domain appears to impersonate “google” | Domain contains common phishing bait words (login/verify/secure)
+https://myaccount.google.com/security,0,brand_login,50,medium,Domain appears to impersonate “google” | Domain contains common phishing bait words (login/verify/secure)
+https://github.com/login,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://en.wikipedia.org/wiki/Phishing,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://www.amazon.com/,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://aws.amazon.com/,0,brand_subdomain,36,low,Domain appears to impersonate “amazon”
+https://login.microsoftonline.com/,0,brand_login,50,medium,Domain appears to impersonate “microsoft” | Domain contains common phishing bait words (login/verify/secure)
+https://login.live.com/,0,brand_login,22,low,Domain contains common phishing bait words (login/verify/secure)
+https://www.paypal.com/signin,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://www.facebook.com/login,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://www.instagram.com/accounts/login/,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://www.netflix.com/login,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://www.coinbase.com/signin,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://secure.bankofamerica.com/login/sign-in/signOn.go,0,brand_login,50,medium,Domain appears to impersonate “bankofamerica” | Domain contains common phishing bait words (login/verify/secure)
+https://signin.ebay.com/,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://www.dropbox.com/login,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://slack.com/signin,0,brand_login,8,safe,No strong phishing indicators detected by heuristics
+https://support.apple.com/,0,brand_subdomain,50,medium,Domain appears to impersonate “apple” | Domain contains common phishing bait words (login/verify/secure)
+https://www.wellsfargo.com/,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://www.irs.gov/refunds,0,gov,38,low,Brand keyword “irs” used in a non-official domain
+https://www.dhl.com/us-en/home/tracking.html,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://www.fedex.com/en-us/tracking.html,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://www.ups.com/track,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://www.troy.edu/,0,edu,8,safe,No strong phishing indicators detected by heuristics
+https://www.hufs.ac.kr/,0,edu,8,safe,No strong phishing indicators detected by heuristics
+https://www.nytimes.com/,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://stackoverflow.com/questions/11227809,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://developer.mozilla.org/en-US/docs/Web,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://zoom.us/j/123456789,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://news.ycombinator.com/,0,popular,8,safe,No strong phishing indicators detected by heuristics
+https://www.reddit.com/login,0,popular,8,safe,No strong phishing indicators detected by heuristics
+http://example.com/,0,http_benign,18,safe,Page is served over insecure HTTP
