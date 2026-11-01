@@ -120,7 +120,7 @@ export default function App() {
   }
 
   async function onPurgeAllReports() {
-    if (!window.confirm(`Purge all ${reports.length} saved reports? Each page will use a Gemini request on its next visit.`)) {
+    if (!window.confirm(`Purge all ${reports.length} saved reports? Each page or email will use a Gemini request the next time it is scored.`)) {
       return;
     }
     setBusy(true);
@@ -503,8 +503,8 @@ export default function App() {
               Saved risk reports
             </h2>
             <p className="mt-1 max-w-2xl text-sm text-[var(--ink-soft)]">
-              A page is scored once, then its saved report is reused without calling
-              Gemini. Purge a report to score that page again on its next visit.
+              A page or email is scored once, then its saved report is reused without
+              calling Gemini. Purge a report to score it again.
             </p>
           </div>
           <button
@@ -523,7 +523,7 @@ export default function App() {
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 bg-[#e7eee9] text-xs uppercase tracking-wider text-[var(--ink-soft)]">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Page</th>
+                  <th className="px-4 py-3 font-semibold">Page or email</th>
                   <th className="px-4 py-3 font-semibold">Risk score</th>
                   <th className="px-4 py-3 font-semibold">Severity</th>
                   <th className="hidden px-4 py-3 font-semibold md:table-cell">Generated</th>
@@ -534,7 +534,7 @@ export default function App() {
                 {!loading && reports.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-4 py-8 text-center text-[var(--ink-soft)]">
-                      No saved reports. Visit a page with the extension to create one.
+                      No saved reports. Visit a page or check an email in Gmail with the extension to create one.
                     </td>
                   </tr>
                 )}
@@ -546,9 +546,11 @@ export default function App() {
                     <td className="max-w-[420px] px-4 py-3">
                       <div
                         className="truncate font-[family-name:var(--font-mono)] text-[13px] font-medium"
-                        title={report.url}
+                        title={report.kind === "email" ? report.domain : report.url}
                       >
-                        {report.url}
+                        {report.kind === "email"
+                          ? `Email: ${report.subject || "(no subject)"}`
+                          : report.url}
                       </div>
                       <div className="truncate text-xs text-[var(--ink-soft)]" title={report.summary}>
                         {report.summary}
@@ -569,7 +571,7 @@ export default function App() {
                         disabled={busy}
                         onClick={() => void onPurgeReport(report.url)}
                         className="rounded-lg p-2 text-[var(--signal)] transition hover:bg-[#fdecea]"
-                        aria-label={`Purge report for ${report.url}`}
+                        aria-label={`Purge report for ${report.kind === "email" ? report.subject || "email" : report.url}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

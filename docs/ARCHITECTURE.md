@@ -62,6 +62,7 @@ So: **all changes to protected state happen through WebAPI requests.** If the da
 | `risk_engine.py` | Heuristic score (+ optional LLM); recommendations | blacklist_store, scanner, gemini |
 | `ai_report.py` | Returns a page's saved report, or fills in `prompts/risk-scoring-prompt.md`, calls the model and computes the weighted risk score and report text | blacklist_store, scanner, gemini, report_store |
 | `gemini.py` | Only module that calls the Google Gemini API | httpx |
+| `email_report.py` | Parses a pasted email, fills in the email prompt, calls the model and computes the risk score, minimum scores and recommended actions | ai_report, blacklist_store, scanner, gemini, report_store |
 | `report_store.py` | Thread-safe read/write of `data/reports.json`; saved reports stay until purged | filesystem only |
 
 Internal call shape (no HTTP between these modules — plain Python imports):
@@ -92,7 +93,8 @@ flowchart LR
 | `config.js` | API base URL from `chrome.storage` |
 | `background.js` | Navigation hook, `/api/check`, `/api/scan`, `/api/analyze`, badge, block redirect |
 | `content.js` | Sends page HTML; paints red highlights from scan results |
-| `report-ui.js` | Starts the page's risk report; shows toasts and the report frame |
+| `report-ui.js` | Starts the page's risk report; shows toasts and the report frame. On Gmail, shows the email check button and frame instead |
+| `email-report.html` | Gmail email check frame: paste an email, then see its risk report |
 | `report.html` | Risk report frame: score, severity and description |
 | `popup.js` | Shows score / factors from tab state; reopens the risk report |
 | `blocked.html` | Interstitial when a domain is blacklisted |

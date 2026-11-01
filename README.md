@@ -86,6 +86,7 @@ cd admin && npm run build
 | Extension popup | Risk gauge + factors + recommendations on any tab |
 | Navigation | Visit a blacklisted host → full-page **blocked** interstitial |
 | Content script | Open a page that *mentions* a blacklisted domain → red highlights + outlined links |
+| Email check | Open Gmail → **NetRex: check an email** → **Load sample** → **Score email** for the email's risk score, severity and next steps |
 | Risk report | Load any page → "generating" toast → "ready" toast → click it for the risk score, severity and written report |
 
 Seed blacklist includes samples like `paypal-verify-account.net`, `microsoft-support-desk.xyz`, and URL shorteners.
@@ -101,6 +102,7 @@ Seed blacklist includes samples like `paypal-verify-account.net`, `microsoft-sup
 | `POST` | `/api/scan` | Parse HTML for blacklist mentions |
 | `POST` | `/api/analyze` | Heuristic analysis ± LLM (popup Deep analyze, admin analyzer) |
 | `POST` | `/api/report` | Saved AI risk report, or a new one scored with `backend/prompts/risk-scoring-prompt.md` |
+| `POST` | `/api/email-report` | Saved AI risk report for a pasted email, or a new one scored with the same prompt file |
 | `GET` | `/api/reports` | List saved reports |
 | `DELETE` | `/api/reports` | Purge all saved reports |
 | `DELETE` | `/api/reports/item?url=` | Purge one saved report |
@@ -119,6 +121,8 @@ The extension sends each page's URL and HTML to `/api/report`. The server reduce
 | 80–100% | Critical |
 
 If the model is unreachable or its reply is invalid after one retry, the severity is shown as unknown, never as 0%. Query strings and typed input values are not sent to the model, but visible page text is, including on signed-in pages. Turn off automatic reports in the extension Options page to generate them only from the popup.
+
+**Email reports:** on Gmail, click **NetRex: check an email** at the bottom left of the page, or **Check an email** in the extension popup, then paste an email's full source or just its text. Gmail itself is never scored as a website, so opening it sends nothing to Gemini. The server reads the authentication results, link destinations and attachment types itself, and the model scores sender authenticity, links, attachments, manipulation and overall judgement against the guidelines in section 4 of the prompt file. The server then computes the percentage, applies minimum scores for dangerous attachments and blacklisted domains, and adds fixed recommended actions (section 6). A criterion is left out when the email has no links or no attachments. The email text is sent to Gemini, but only the sender, subject and report are saved. Attachment contents are never opened.
 
 **Free-tier privacy:** Google's terms let it use content sent through unpaid Gemini API keys to improve its products, human reviewers may read that content, and Google says not to submit sensitive, confidential or personal information. With a free key, turn off automatic reports before browsing signed-in or private pages.
 

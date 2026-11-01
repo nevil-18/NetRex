@@ -1,4 +1,4 @@
-"""Saved risk reports, kept on disk until purged so a page is only scored once."""
+"""Saved risk reports, kept on disk until purged so a page or email is only scored once."""
 from __future__ import annotations
 
 import json
@@ -48,6 +48,8 @@ def list_reports() -> list[dict[str, Any]]:
     summaries = [
         {
             "url": url,
+            "kind": report.get("kind", "page"),
+            "subject": report.get("subject", ""),
             "domain": report.get("domain", ""),
             "severity": report.get("severity"),
             "level": report.get("level", "unknown"),

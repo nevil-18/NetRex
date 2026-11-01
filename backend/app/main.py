@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import ai_report, blacklist_store, report_store, risk_engine
+from . import ai_report, blacklist_store, email_report, report_store, risk_engine
 from .scanner import find_domain_mentions, highlight_selectors, extract_hostname
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -60,6 +60,10 @@ class AnalyzeIn(BaseModel):
 class ReportIn(BaseModel):
     url: str
     html: str | None = None
+
+
+class EmailReportIn(BaseModel):
+    raw: str
 
 
 @app.get("/api/health")
@@ -144,6 +148,19 @@ def risk_report(body: ReportIn) -> dict[str, Any]:
     if not extract_hostname(body.url):
         raise HTTPException(status_code=400, detail="Provide a valid url")
     return ai_report.generate_report(body.url, body.html)
+
+
+@app.post("/api/email-report")
+def email_risk_report(body: EmailReportIn) -> dict[str, Any]:
+    if not body.raw.strip():
+        raise HTTPException(status_code=400, detail="Paste an email to analyze")
+    if len(body.raw) > email_report.MAX_RAW_CHARS:
+        limit_mb = email_report.MAX_RAW_CHARS // 1_000_000
+        raise HTTPException(
+            status_code=413,
+            detail=f"That email is over {limit_mb} MB. Remove large attachments and try again.",
+        )
+    return email_report.generate_report(body.raw)
 
 
 @app.get("/api/reports")

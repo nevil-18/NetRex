@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetRex email check</title>
+    <link rel="stylesheet" href="report.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <p class="eyebrow">NetRex email check</p>
+        <h1 id="heading" class="plain-heading">Paste an email</h1>
+      </div>
+      <button id="close" type="button" aria-label="Close">×</button>
+    </header>
+
+    <main>
+      <form id="paste-view" class="paste">
+        <p>
+          Paste the full message source for the best result. In Gmail, open the email's <strong>⋮</strong> menu and
+          choose <strong>Show original</strong>. Pasting only the text also works, but the sender can't be checked.
+        </p>
+        <textarea
+          id="raw"
+          aria-label="Email source or text"
+          placeholder="From: sender@example.com&#10;Subject: ...&#10;&#10;Email text"
+          rows="12"
+          spellcheck="false"
+          autofocus
+        ></textarea>
+        <div class="buttons">
+          <button id="submit" class="primary" type="submit" disabled>Score email</button>
+          <button id="sample" class="secondary" type="button">Load sample</button>
+        </div>
+        <p id="error" class="notice" hidden></p>
+        <p class="meta">
+          The email text goes to Google Gemini. With a free API key, Google may review it, so don't paste confidential
+          mail. NetRex saves the sender, subject and report on this computer, but not the email text.
+        </p>
+      </form>
+
+      <div id="report-view" hidden>
+        <section class="score-card" id="score-card" data-level="unknown">
+          <div class="score-row">
+            <div>
+              <div class="label">Risk score</div>
+              <div class="score" id="score">—</div>
+            </div>
+            <div>
+              <div class="label">Severity</div>
+              <div class="severity" id="severity">Unknown</div>
+            </div>
+          </div>
+          <div class="meter" id="meter" role="img" aria-label="Risk score not available">
+            <span id="meter-fill"></span>
+          </div>
+          <p id="meaning" class="meaning"></p>
+          <p id="attack-type" class="tag" hidden></p>
+        </section>
+
+        <p id="summary" class="summary"></p>
+        <p id="report-error" class="notice" hidden></p>
+
+        <section class="sender-card">
+          <div id="subject" class="subject"></div>
+          <div id="sender" class="sender"></div>
+          <div id="brand" class="brand" hidden></div>
+        </section>
+
+        <p id="injection" class="notice" hidden></p>
+
+        <section>
+          <h2>What to do</h2>
+          <ol id="actions" class="actions"></ol>
+        </section>
+
+        <section>
+          <h2>Sender checks</h2>
+          <div id="auth" class="chips"></div>
+          <p id="no-headers" hidden>
+            No email headers were pasted, so the sender could not be checked. Paste the full message source for a
+            stronger result.
+          </p>
+          <p id="reply-to" hidden></p>
+        </section>
+
+        <section id="links-section" hidden>
+          <h2>Links that hide their destination</h2>
+          <ul id="links" class="plain-list"></ul>
+        </section>
+
+        <section id="attachments-section" hidden>
+          <h2>Attachments</h2>
+          <ul id="attachments" class="plain-list"></ul>
+        </section>
+
+        <section id="blacklist-section" hidden>
+          <h2>On your blacklist</h2>
+          <ul id="blacklist" class="plain-list"></ul>
+        </section>
+
+        <section id="criteria-section" hidden>
+          <h2>Score breakdown</h2>
+          <ul id="criteria" class="criteria"></ul>
+          <p id="not-assessed" class="meta" hidden></p>
+          <div id="adjustments"></div>
+        </section>
+
+        <p id="meta" class="meta"></p>
+        <button id="again" class="secondary" type="button">Check another email</button>
+      </div>
+    </main>
+    <script type="module" src="email-report.js"></script>
+  </body>
+</html>

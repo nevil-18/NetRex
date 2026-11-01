@@ -1,5 +1,7 @@
 (() => {
   const HOST_ID = "netrex-report-ui";
+  // Gmail gets the paste-an-email panel instead of a report on the site itself.
+  const ON_GMAIL = location.hostname === "mail.google.com";
   const LOW_TOAST_MS = 10000;
   const FAILED_TOAST_MS = 8000;
   // Saved reports return almost at once, so they skip the "generating" toast.
@@ -40,6 +42,17 @@
       border: 0; border-radius: 16px; background: #f5f8f6;
       box-shadow: 0 16px 50px rgba(0, 0, 0, 0.4);
     }
+    .launcher {
+      position: fixed; bottom: 16px; left: 16px; z-index: 2147483646;
+      display: flex; align-items: stretch; border-radius: 999px; overflow: hidden;
+      background: #0f1c1a; color: #f2f7f4;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      font: 600 13px/1 "Segoe UI", system-ui, sans-serif;
+    }
+    .launcher button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+    .launcher button:hover { background: rgba(255, 255, 255, 0.1); }
+    .launcher .open { padding: 10px 6px 10px 14px; }
+    .launcher .hide { padding: 10px 12px 10px 6px; color: #b7cdc3; font-size: 15px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes slide-in { from { opacity: 0; transform: translateY(-8px); } }
     @media (prefers-reduced-motion: reduce) {
@@ -55,6 +68,8 @@
   let frameEl = null;
   let running = false;
   let hasReport = false;
+  let launcherEl = null;
+  let launcherDismissed = false;
 
   function ensureRoot() {
     if (root) return root;
@@ -124,14 +139,47 @@
   function closeFrame() {
     frameEl?.remove();
     frameEl = null;
+    if (ON_GMAIL) showLauncher();
+  }
+
+  function hideLauncher() {
+    launcherEl?.remove();
+    launcherEl = null;
+  }
+
+  function showLauncher() {
+    if (launcherEl || launcherDismissed) return;
+    const launcher = document.createElement("div");
+    launcher.className = "launcher";
+
+    const open = document.createElement("button");
+    open.className = "open";
+    open.type = "button";
+    open.textContent = "NetRex: check an email";
+    open.addEventListener("click", openFrame);
+
+    const hide = document.createElement("button");
+    hide.className = "hide";
+    hide.type = "button";
+    hide.setAttribute("aria-label", "Hide until this page reloads");
+    hide.textContent = "×";
+    hide.addEventListener("click", () => {
+      launcherDismissed = true;
+      hideLauncher();
+    });
+
+    launcher.append(open, hide);
+    ensureRoot().appendChild(launcher);
+    launcherEl = launcher;
   }
 
   function openFrame() {
     if (frameEl) return;
+    hideLauncher();
     const frame = document.createElement("iframe");
     frame.className = "frame";
-    frame.title = "NetRex risk report";
-    frame.src = chrome.runtime.getURL("report.html");
+    frame.title = ON_GMAIL ? "NetRex email check" : "NetRex risk report";
+    frame.src = chrome.runtime.getURL(ON_GMAIL ? "email-report.html" : "report.html");
     frame.addEventListener("load", () => frame.focus());
     ensureRoot().appendChild(frame);
     frameEl = frame;
@@ -204,7 +252,9 @@
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === "CLOSE_REPORT_FRAME") closeFrame();
     if (message.type === "SHOW_REPORT") {
-      if (hasReport) {
+      if (ON_GMAIL) {
+        openFrame();
+      } else if (hasReport) {
         hideToast();
         openFrame();
       } else {
@@ -213,5 +263,6 @@
     }
   });
 
-  if (document.contentType === "text/html" && document.body) void generate(false);
+  if (ON_GMAIL) showLauncher();
+  else if (document.contentType === "text/html" && document.body) void generate(false);
 })();

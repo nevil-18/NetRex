@@ -45,6 +45,8 @@ export type AnalyzeResult = {
 
 export type SavedReport = {
   url: string;
+  kind: "page" | "email";
+  subject: string;
   domain: string;
   severity: number | null;
   level: string;

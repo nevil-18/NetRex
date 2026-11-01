@@ -1,12 +1,13 @@
-"""AI risk report: fills in prompts/risk-scoring-prompt.md, calls the model and
-computes the final percentage on the server, so page text can't set it directly."""
+"""AI risk report for web pages: fills in prompts/risk-scoring-prompt.md, calls the model
+and computes the final percentage on the server, so page text can't set it directly.
+Also holds the prompt loading and scoring helpers that email_report.py shares."""
 from __future__ import annotations
 
 import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import httpx
@@ -39,17 +40,20 @@ class ModelOutputError(ValueError):
     """The model replied, but not with the JSON the prompt requires."""
 
 
-def _load_prompts() -> tuple[str, str]:
+def _load_prompts() -> list[str]:
     blocks = re.findall(r"```text\n(.*?)\n```", PROMPT_PATH.read_text(encoding="utf-8"), re.S)
-    if len(blocks) < 2:
-        raise RuntimeError(f"{PROMPT_PATH} must hold the system and user prompt text blocks")
-    return blocks[0], blocks[1]
+    if len(blocks) != 4:
+        raise RuntimeError(f"{PROMPT_PATH} must hold system and user text blocks for websites and emails")
+    return blocks
 
 
-SYSTEM_PROMPT, USER_TEMPLATE = _load_prompts()
+SYSTEM_PROMPT, USER_TEMPLATE, EMAIL_SYSTEM_PROMPT, EMAIL_USER_TEMPLATE = _load_prompts()
+
+# What a failed scoring attempt can raise: provider errors, and replies that aren't usable.
+SCORING_ERRORS = (httpx.HTTPError, KeyError, IndexError, TypeError, AttributeError, ValueError)
 
 
-def _escape(value: str) -> str:
+def escape(value: str) -> str:
     """Stop scraped text from closing a block early and posing as trusted text."""
     return value.replace("<", "&lt;")
 
@@ -61,7 +65,7 @@ def _absolute(page_url: str, ref: str) -> str:
         return ref.strip()
 
 
-def _strip_query(url: str) -> str:
+def strip_query(url: str) -> str:
     """Query strings and fragments can hold session tokens, so they aren't sent."""
     try:
         parts = urlsplit(url if "://" in url else f"https://{url}")
@@ -75,7 +79,7 @@ def extract_site_data(html: str, page_url: str) -> dict[str, str]:
     soup = BeautifulSoup(html or "", "lxml")
 
     scripts = soup.find_all("script")
-    script_sources = [_strip_query(_absolute(page_url, s["src"])) for s in scripts if s.get("src")]
+    script_sources = [strip_query(_absolute(page_url, s["src"])) for s in scripts if s.get("src")]
     inline_parts: list[str] = []
     remaining = MAX_INLINE_SCRIPTS
     for script in scripts:
@@ -96,7 +100,7 @@ def extract_site_data(html: str, page_url: str) -> dict[str, str]:
 
     forms = []
     for form in soup.find_all("form"):
-        action = _strip_query(_absolute(page_url, form.get("action") or page_url))
+        action = strip_query(_absolute(page_url, form.get("action") or page_url))
         types = sorted({(i.get("type") or "text").lower() for i in form.find_all("input")})
         forms.append(f"action={action} inputs={','.join(types) or 'none'}")
 
@@ -136,7 +140,7 @@ def registered_parts(hostname: str) -> tuple[str, str]:
 def build_user_message(url: str, html: str, on_blacklist: bool) -> str:
     hostname = extract_hostname(url)
     registered, tld = registered_parts(hostname)
-    trusted_url = _escape(_strip_query(url)).replace("\n", "").replace("\r", "")
+    trusted_url = escape(strip_query(url)).replace("\n", "").replace("\r", "")
     values = {
         "url": trusted_url,
         "registered_domain": registered,
@@ -144,9 +148,13 @@ def build_user_message(url: str, html: str, on_blacklist: bool) -> str:
         "hostname": hostname,
         "true|false": "true" if on_blacklist else "false",
     }
-    values.update({k: _escape(v) for k, v in extract_site_data(html, url).items()})
+    values.update({k: escape(v) for k, v in extract_site_data(html, url).items()})
+    return fill_template(USER_TEMPLATE, values)
+
+
+def fill_template(template: str, values: dict[str, str]) -> str:
     # One pass, so a page title containing "{url}" isn't expanded by a later field.
-    return re.sub(r"\{([\w|]+)\}", lambda m: values.get(m.group(1), m.group(0)), USER_TEMPLATE)
+    return re.sub(r"\{([\w|]+)\}", lambda m: values.get(m.group(1), m.group(0)), template)
 
 
 def severity_from_model(raw: str) -> dict[str, Any]:
@@ -172,23 +180,7 @@ def severity_from_model(raw: str) -> dict[str, Any]:
         severity = 60
         adjustments.append("The page tried to instruct the AI, so the score was raised to 60.")
 
-    criteria = []
-    for key, weight in WEIGHTS.items():
-        item = crit[key] if isinstance(crit[key], dict) else {}
-        evidence = item.get("evidence")
-        evidence = evidence if isinstance(evidence, list) else []
-        criteria.append(
-            {
-                "key": key,
-                "label": CRITERION_LABELS[key],
-                "score": scores[key],
-                "weight": round(weight * 100),
-                "contribution": round(scores[key] * weight, 1),
-                "confidence": str(item.get("confidence") or "low"),
-                "evidence": [str(e)[:120] for e in evidence[:3]],
-            }
-        )
-    criteria.sort(key=lambda c: -c["contribution"])
+    criteria = criterion_rows(crit, scores, WEIGHTS, CRITERION_LABELS)
 
     brand = crit["lookalike_domain"].get("impersonated_brand")
     excerpt = data.get("injection_excerpt")
@@ -203,6 +195,33 @@ def severity_from_model(raw: str) -> dict[str, Any]:
         "injection_excerpt": str(excerpt)[:100] if injected and excerpt else None,
         "adjustments": adjustments,
     }
+
+
+def criterion_rows(
+    crit: dict[str, Any],
+    scores: dict[str, int],
+    weights: dict[str, float],
+    labels: dict[str, str],
+) -> list[dict[str, Any]]:
+    """The per-criterion report rows, biggest contribution to the score first."""
+    rows = []
+    for key, weight in weights.items():
+        item = crit[key] if isinstance(crit[key], dict) else {}
+        evidence = item.get("evidence")
+        evidence = evidence if isinstance(evidence, list) else []
+        rows.append(
+            {
+                "key": key,
+                "label": labels[key],
+                "score": scores[key],
+                "weight": round(weight * 100),
+                "contribution": round(scores[key] * weight, 1),
+                "confidence": str(item.get("confidence") or "low"),
+                "evidence": [str(e)[:120] for e in evidence[:3]],
+            }
+        )
+    rows.sort(key=lambda c: -c["contribution"])
+    return rows
 
 
 def severity_level(severity: int) -> str:
@@ -244,7 +263,24 @@ def call_model(user_message: str) -> gemini.GeminiReply:
     return gemini.generate_json(SYSTEM_PROMPT, user_message, MODEL_TIMEOUT_SECONDS)
 
 
-def _describe_failure(exc: Exception) -> str:
+def score_with_retry(
+    call: Callable[[str], gemini.GeminiReply],
+    message: str,
+    parse: Callable[[str], dict[str, Any]],
+) -> tuple[gemini.GeminiReply, dict[str, Any]]:
+    """Call the model and parse its reply. An unusable reply may be fine on a second try,
+    but provider errors are raised at once, as the Gemini client has already retried them."""
+    try:
+        reply = call(message)
+        return reply, parse(reply.text)
+    except httpx.HTTPError:
+        raise
+    except SCORING_ERRORS:
+        reply = call(message)
+        return reply, parse(reply.text)
+
+
+def describe_failure(exc: Exception) -> str:
     if isinstance(exc, httpx.HTTPStatusError):
         code = exc.response.status_code
         if code == 429:
@@ -259,7 +295,7 @@ def _describe_failure(exc: Exception) -> str:
     return "Gemini returned an unusable response."
 
 
-def _unknown(base: dict[str, Any], error: str) -> dict[str, Any]:
+def unknown_report(base: dict[str, Any], error: str) -> dict[str, Any]:
     # Never 0: a page that breaks scoring on purpose must not come out as safe.
     return {
         **base,
@@ -282,7 +318,7 @@ def generate_report(url: str, html: str | None) -> dict[str, Any]:
     Always returns a report; severity is None if scoring failed. Failures aren't
     saved, so the next visit tries again.
     """
-    page_url = _strip_query(url)
+    page_url = strip_query(url)
     domain = extract_hostname(url)
     on_blacklist = blacklist_store.is_blocked(domain) is not None
 
@@ -298,27 +334,19 @@ def generate_report(url: str, html: str | None) -> dict[str, Any]:
         "cached": False,
     }
     if not gemini.api_key():
-        return _unknown(base, "GEMINI_API_KEY is not set on the NetRex server.")
+        return unknown_report(base, "GEMINI_API_KEY is not set on the NetRex server.")
 
     message = build_user_message(url, html or "", on_blacklist)
-    failure: Exception | None = None
-    for _attempt in range(2):
-        try:
-            reply = call_model(message)
-            result = severity_from_model(reply.text)
-        except httpx.HTTPError as exc:
-            failure = exc  # the Gemini client has already retried these
-            break
-        except (KeyError, IndexError, TypeError, AttributeError, ValueError) as exc:
-            failure = exc  # an unusable reply may be fine on a second try
-            continue
-        report = {
-            **base,
-            **result,
-            "report": build_description(result),
-            "model": reply.model,
-            "error": None,
-        }
-        report_store.save(page_url, report)
-        return report
-    return _unknown(base, _describe_failure(failure) if failure else "Scoring failed.")
+    try:
+        reply, result = score_with_retry(call_model, message, severity_from_model)
+    except SCORING_ERRORS as exc:
+        return unknown_report(base, describe_failure(exc))
+    report = {
+        **base,
+        **result,
+        "report": build_description(result),
+        "model": reply.model,
+        "error": None,
+    }
+    report_store.save(page_url, report)
+    return report

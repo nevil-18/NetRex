@@ -35,6 +35,10 @@
     {
       "resources": ["blocked.html", "blocked.css", "blocked.js", "report.html", "report.css", "report.js"],
       "matches": ["<all_urls>"]
+    },
+    {
+      "resources": ["email-report.html", "email-report.js"],
+      "matches": ["https://mail.google.com/*"]
     }
   ],
   "options_ui": {

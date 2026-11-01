@@ -80,8 +80,27 @@ function paint(state) {
   }
 }
 
+// Gmail isn't scored as a website, so the popup only offers the email check there.
+function paintGmail() {
+  scoreEl.textContent = "—";
+  levelEl.textContent = "not scored";
+  domainEl.textContent = "mail.google.com";
+  summaryEl.textContent = "NetRex checks Gmail one email at a time. Paste an email to get its risk report.";
+  statusPill.textContent = "Gmail";
+  statusPill.className = "pill";
+  factorsEl.closest(".card").style.display = "none";
+  tipsEl.closest(".card").style.display = "none";
+  document.getElementById("report").textContent = "Check an email";
+  document.getElementById("analyze").style.display = "none";
+  document.getElementById("recheck").style.display = "none";
+}
+
 async function load() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.url?.startsWith("https://mail.google.com/")) {
+    paintGmail();
+    return;
+  }
   const state = await chrome.runtime.sendMessage({
     type: "GET_TAB_STATE",
     tabId: tab?.id,

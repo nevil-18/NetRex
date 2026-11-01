@@ -12,6 +12,12 @@ function hostnameFromUrl(url) {
   }
 }
 
+// Gmail is checked one email at a time, never as a website: scoring it would send the
+// inbox to the AI model and rate Google rather than the mail.
+function isGmail(url) {
+  return hostnameFromUrl(url) === "mail.google.com";
+}
+
 function isExtensionPage(url) {
   return !url || url.startsWith("chrome://") || url.startsWith("chrome-extension://") || url.startsWith("devtools://");
 }
@@ -44,6 +50,13 @@ async function fetchReport(url, html) {
   return apiFetch("/api/report", {
     method: "POST",
     body: JSON.stringify({ url, html: (html || "").slice(0, 1000000) }),
+  });
+}
+
+async function fetchEmailReport(raw) {
+  return apiFetch("/api/email-report", {
+    method: "POST",
+    body: JSON.stringify({ raw }),
   });
 }
 
@@ -87,7 +100,7 @@ function isNetRexPage(url) {
 }
 
 async function shouldRunReport(url, manual) {
-  if (isNetRexPage(url)) return false;
+  if (isNetRexPage(url) || isGmail(url)) return false;
   if (!manual) {
     const { autoReport } = await chrome.storage.sync.get(["autoReport"]);
     if (autoReport === false) return false;
@@ -124,6 +137,11 @@ async function protectTab(tabId, url) {
   if (isExtensionPage(url)) return;
   const host = hostnameFromUrl(url);
   if (!host) return;
+  if (isGmail(url)) {
+    tabState.delete(tabId);
+    chrome.action.setBadgeText({ tabId, text: "" });
+    return;
+  }
 
   try {
     const result = await checkUrl(url);
@@ -201,6 +219,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (!tab?.id || !tab.url || isExtensionPage(tab.url)) {
         throw new Error("Open a normal webpage to analyze.");
       }
+      if (isGmail(tab.url)) throw new Error("Gmail isn't scored as a website. Check an email instead.");
       let html = "";
       try {
         const [{ result }] = await chrome.scripting.executeScript({
@@ -228,6 +247,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const report = await fetchReport(message.url, message.html);
       if (sender.tab?.id != null) await saveReport(sender.tab.id, message.url, report);
       return report;
+    }
+    if (message.type === "CHECK_EMAIL") {
+      return fetchEmailReport(message.raw);
     }
     if (message.type === "GET_REPORT") {
       const key = reportKey(sender.tab?.id);
