@@ -5,7 +5,7 @@ Hackathon project: an AI-assisted cybersecurity tool that **blocks risky domains
 ```
 Chrome extension  ──►  FastAPI WebAPI  ──►  blacklist.json
         │                     │
-        │                     ├── heuristic (+ optional OpenAI) risk score
+        │                     ├── heuristic + Gemini risk score
         │                     └── HTML scan / highlight payload
         ▼
    Admin console (React) to add/remove domains & preview scores
@@ -19,16 +19,20 @@ Chrome extension  ──►  FastAPI WebAPI  ──►  blacklist.json
 cd backend
 python3 -m pip install -r requirements.txt
 export PATH="$HOME/.local/bin:$PATH"
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8741
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8741
 ```
 
-Optional LLM enrichment:
+AI risk reports need a Google Gemini API key. Create a free one at [Google AI Studio](https://aistudio.google.com/apikey), then set it before starting the server:
 
 ```bash
-export OPENAI_API_KEY=sk-...
+export GEMINI_API_KEY=your-key
 ```
 
-Without a key, scoring still works via heuristics (blacklist, suspicious TLDs, brand bait, urgency language, password forms, etc.).
+The default model is `gemini-3.8-flash`. Set `GEMINI_MODEL` to use another, such as `gemini-3.5-flash-lite`.
+
+Without a key, the popup's heuristic score still works (blacklist, suspicious TLDs, brand bait, urgency language, password forms, etc.), but risk reports show as unavailable.
+
+Run the backend tests with `python3 -m pip install pytest && cd backend && python3 -m pytest tests`.
 
 ### 2. Admin console (port `8742`)
 
@@ -58,10 +62,11 @@ cd admin && npm run build
 
 | Surface | Demo moment |
 | --- | --- |
-| Admin console | Add/remove a domain; run **Risk analyzer** on a phishing-looking URL |
+| Admin console | Add/remove a domain; run **Risk analyzer** on a phishing-looking URL; purge saved reports |
 | Extension popup | Risk gauge + factors + recommendations on any tab |
 | Navigation | Visit a blacklisted host → full-page **blocked** interstitial |
 | Content script | Open a page that *mentions* a blacklisted domain → red highlights + outlined links |
+| Risk report | Load any page → "generating" toast → "ready" toast → click it for the risk score, severity and written report |
 
 Seed blacklist includes samples like `paypal-verify-account.net`, `microsoft-support-desk.xyz`, and URL shorteners.
 
@@ -70,12 +75,36 @@ Seed blacklist includes samples like `paypal-verify-account.net`, `microsoft-sup
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/health` | Liveness + blacklist stats |
-| `GET/POST/DELETE` | `/api/blacklist` | List / add / remove domains |
+| `GET/POST` | `/api/blacklist` | List / add domains |
+| `DELETE` | `/api/blacklist/{domain}` | Remove a domain |
 | `POST` | `/api/check` | Is this URL/domain blocked? + quick score |
 | `POST` | `/api/scan` | Parse HTML for blacklist mentions |
-| `POST` | `/api/analyze` | Full risk report (heuristics ± LLM) |
+| `POST` | `/api/analyze` | Heuristic analysis ± LLM (popup Deep analyze, admin analyzer) |
+| `POST` | `/api/report` | Saved AI risk report, or a new one scored with `backend/prompts/risk-scoring-prompt.md` |
+| `GET` | `/api/reports` | List saved reports |
+| `DELETE` | `/api/reports` | Purge all saved reports |
+| `DELETE` | `/api/reports/item?url=` | Purge one saved report |
 
 Interactive docs: [http://127.0.0.1:8741/docs](http://127.0.0.1:8741/docs)
+
+## Risk reports
+
+The extension sends each page's URL and HTML to `/api/report`. The server reduces the HTML to the fields in `backend/prompts/risk-scoring-prompt.md` (title, visible text, scripts, iframes, form actions and input types, link hosts), and the model scores four criteria. The server then computes the final percentage from the weights in that file:
+
+| Risk score | Severity |
+| --- | --- |
+| 0–29% | Low |
+| 30–59% | Medium |
+| 60–79% | High |
+| 80–100% | Critical |
+
+If the model is unreachable or its reply is invalid after one retry, the severity is shown as unknown, never as 0%. Query strings and typed input values are not sent to the model, but visible page text is, including on signed-in pages. Turn off automatic reports in the extension Options page to generate them only from the popup.
+
+**Free-tier privacy:** Google's terms let it use content sent through unpaid Gemini API keys to improve its products, human reviewers may read that content, and Google says not to submit sensitive, confidential or personal information. With a free key, turn off automatic reports before browsing signed-in or private pages.
+
+**Saved reports:** the first successful report for a page is saved to `backend/data/reports.json`, and later visits reuse it without calling Gemini, including after a server restart. Pages are matched by URL without the query string, so each path gets its own report. Failed attempts aren't saved. To score a page again, such as after changing the prompt or model, purge its report under **Saved risk reports** in the admin console and revisit it. The file works as a browsing history, so it is ignored by git, and the API and console only listen on this machine.
+
+**Free-tier limits:** each page without a saved report uses one request. If the limit is reached, reports show as unavailable until it resets. Current limits are listed in [AI Studio](https://aistudio.google.com/rate-limit).
 
 ## Project layout
 

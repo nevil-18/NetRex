@@ -47,6 +47,21 @@
         border: 1px solid #c5d4cc;
         font-family: ui-monospace, monospace;
       }
+      .toggle {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        margin-top: 20px;
+        font-size: 14px;
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+        line-height: 1.4;
+      }
+      .toggle input {
+        width: auto;
+        margin: 2px 0 0;
+      }
       button {
         margin-top: 14px;
         border: 0;
@@ -73,6 +88,16 @@
       </p>
       <label for="apiBase">API base URL</label>
       <input id="apiBase" type="url" placeholder="http://127.0.0.1:8741" />
+      <label class="toggle">
+        <input id="autoReport" type="checkbox" />
+        <span>
+          Generate an AI risk report on every page load. Page text, script and
+          form details go to the Guardian server and then Google Gemini. With a
+          free Gemini key, Google may use this content and human reviewers may
+          read it, so turn this off for private browsing. When it is off, use
+          the Report button in the popup.
+        </span>
+      </label>
       <button id="save" type="button">Save</button>
       <div id="msg"></div>
     </main>

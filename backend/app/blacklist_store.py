@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import json
+import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "blacklist.json"
 _lock = threading.Lock()
+
+_HOSTNAME_RE = re.compile(r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}|\d{1,3}(?:\.\d{1,3}){3}")
+_IP_RE = re.compile(r"\d{1,3}(?:\.\d{1,3}){3}")
+# Second-level labels used as public suffixes under country codes, as in co.uk.
+_COUNTRY_SECOND_LEVELS = {"co", "com", "net", "org", "gov", "ac", "edu"}
 
 
 def _utc_now() -> str:
@@ -15,14 +22,31 @@ def _utc_now() -> str:
 
 
 def _normalize(domain: str) -> str:
+    """Reduce a domain or pasted URL to its bare hostname."""
     d = domain.strip().lower()
-    if d.startswith("http://") or d.startswith("https://"):
-        from urllib.parse import urlparse
-
-        d = urlparse(d).hostname or d
+    try:
+        d = urlsplit(d if "://" in d else f"https://{d}").hostname or ""
+    except ValueError:
+        return ""
     if d.startswith("www."):
         d = d[4:]
     return d.rstrip(".")
+
+
+def registered_domain(hostname: str) -> str:
+    """Best-effort registrable domain, e.g. a.b.example.co.uk -> example.co.uk."""
+    if _IP_RE.fullmatch(hostname) or ":" in hostname:
+        return hostname
+    labels = hostname.split(".")
+    if len(labels) < 2:
+        return hostname
+    keep = 3 if len(labels[-1]) == 2 and labels[-2] in _COUNTRY_SECOND_LEVELS else 2
+    return ".".join(labels[-keep:])
+
+
+def _is_public_suffix(hostname: str) -> bool:
+    labels = hostname.split(".")
+    return len(labels) == 2 and len(labels[1]) == 2 and labels[0] in _COUNTRY_SECOND_LEVELS
 
 
 def _read() -> dict[str, Any]:
@@ -70,8 +94,10 @@ def add_domain(
     severity: str = "high",
 ) -> dict[str, Any]:
     normalized = _normalize(domain)
-    if not normalized or "." not in normalized:
-        raise ValueError("Invalid domain")
+    if not _HOSTNAME_RE.fullmatch(normalized):
+        raise ValueError("Enter a valid domain, such as evil-domain.com")
+    if _is_public_suffix(normalized):
+        raise ValueError(f"{normalized} is a public suffix; blocking it would block every site under it")
     severity = severity.lower().strip() or "high"
     if severity not in {"low", "medium", "high", "critical"}:
         severity = "high"

@@ -17,7 +17,7 @@
 
 4. **Control plane (45s)** — Admin console: add `evil-gift-cards.xyz`, re-check from the extension, then delete it.
 
-5. **Close (15s)** — Optional: set `OPENAI_API_KEY` and re-analyze to show “LLM-enhanced”.
+5. **Close (15s)** — Optional: set `GEMINI_API_KEY` and re-analyze to show “LLM-enhanced”.
 
 ## What wins on a hackathon stage
 

@@ -9,7 +9,7 @@ import {
   ShieldOff,
   Trash2,
 } from "lucide-react";
-import { api, type AnalyzeResult, type BlacklistEntry, type Severity } from "./api";
+import { api, type AnalyzeResult, type BlacklistEntry, type SavedReport, type Severity } from "./api";
 import { Panel, RiskGauge, SeverityBadge } from "./components";
 
 export default function App() {
@@ -25,13 +25,15 @@ export default function App() {
   const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [apiOnline, setApiOnline] = useState(false);
+  const [reports, setReports] = useState<SavedReport[]>([]);
 
   async function refresh() {
     setLoading(true);
     setError(null);
     try {
-      const [list, health] = await Promise.all([api.list(), api.health()]);
+      const [list, health, saved] = await Promise.all([api.list(), api.health(), api.reports()]);
       setDomains(list.domains);
+      setReports(saved.reports);
       setApiOnline(Boolean(health.ok));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load blacklist");
@@ -89,6 +91,35 @@ export default function App() {
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not remove domain");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPurgeReport(url: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.purgeReport(url);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not purge report");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPurgeAllReports() {
+    if (!window.confirm(`Purge all ${reports.length} saved reports? Each page will use a Gemini request on its next visit.`)) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await api.purgeAllReports();
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not purge reports");
     } finally {
       setBusy(false);
     }
@@ -308,7 +339,7 @@ export default function App() {
             <p className="mb-4 text-sm text-[var(--ink-soft)]">
               Score any URL with heuristics (and an optional LLM if{" "}
               <code className="rounded bg-[var(--paper-2)] px-1 font-[family-name:var(--font-mono)] text-xs">
-                OPENAI_API_KEY
+                GEMINI_API_KEY
               </code>{" "}
               is set).
             </p>
@@ -399,6 +430,90 @@ export default function App() {
           </Panel>
         </div>
       </div>
+
+      <Panel className="animate-rise-delay-3 mt-6">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold">
+              Saved risk reports
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm text-[var(--ink-soft)]">
+              A page is scored once, then its saved report is reused without calling
+              Gemini. Purge a report to score that page again on its next visit.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={busy || reports.length === 0}
+            onClick={() => void onPurgeAllReports()}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--signal)] px-4 py-2 text-sm font-semibold text-[var(--signal-deep)] transition hover:bg-[#fdecea] disabled:opacity-50"
+          >
+            <Trash2 className="h-4 w-4" />
+            Purge all
+          </button>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-[var(--line)]">
+          <div className="max-h-[420px] overflow-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="sticky top-0 bg-[#e7eee9] text-xs uppercase tracking-wider text-[var(--ink-soft)]">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Page</th>
+                  <th className="px-4 py-3 font-semibold">Risk score</th>
+                  <th className="px-4 py-3 font-semibold">Severity</th>
+                  <th className="hidden px-4 py-3 font-semibold md:table-cell">Generated</th>
+                  <th className="px-4 py-3 font-semibold" />
+                </tr>
+              </thead>
+              <tbody>
+                {!loading && reports.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-[var(--ink-soft)]">
+                      No saved reports. Visit a page with the extension to create one.
+                    </td>
+                  </tr>
+                )}
+                {reports.map((report) => (
+                  <tr
+                    key={report.url}
+                    className="border-t border-[var(--line)] bg-white/40 transition hover:bg-white/80"
+                  >
+                    <td className="max-w-[420px] px-4 py-3">
+                      <div
+                        className="truncate font-[family-name:var(--font-mono)] text-[13px] font-medium"
+                        title={report.url}
+                      >
+                        {report.url}
+                      </div>
+                      <div className="truncate text-xs text-[var(--ink-soft)]" title={report.summary}>
+                        {report.summary}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-semibold tabular-nums">{report.severity}%</td>
+                    <td className="px-4 py-3">
+                      <SeverityBadge severity={report.level} />
+                    </td>
+                    <td className="hidden whitespace-nowrap px-4 py-3 text-[var(--ink-soft)] md:table-cell">
+                      {new Date(report.generated_at).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void onPurgeReport(report.url)}
+                        className="rounded-lg p-2 text-[var(--signal)] transition hover:bg-[#fdecea]"
+                        aria-label={`Purge report for ${report.url}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </Panel>
     </div>
   );
 }

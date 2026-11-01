@@ -26,14 +26,14 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
+      "js": ["content.js", "report-ui.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["blocked.html", "blocked.css", "blocked.js"],
+      "resources": ["blocked.html", "blocked.css", "blocked.js", "report.html", "report.css", "report.js"],
       "matches": ["<all_urls>"]
     }
   ],

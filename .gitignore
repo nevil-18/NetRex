@@ -16,3 +16,5 @@ admin/dist/
 *.egg-info/
 .coverage
 htmlcov/
+backend/data/reports.json
+backend/data/reports.tmp

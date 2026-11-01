@@ -40,6 +40,63 @@ async function analyzeUrl(url, html) {
   });
 }
 
+async function fetchReport(url, html) {
+  return apiFetch("/api/report", {
+    method: "POST",
+    body: JSON.stringify({ url, html: (html || "").slice(0, 1000000) }),
+  });
+}
+
+const reportKey = (tabId) => `report:${tabId}`;
+
+// Session storage survives the service worker being stopped while idle.
+async function saveReport(tabId, url, report) {
+  let tab;
+  try {
+    tab = await chrome.tabs.get(tabId);
+  } catch {
+    return; // tab closed while the report was generating
+  }
+  // The tab moved to another site while this report was generating.
+  if (hostnameFromUrl(tab.url) !== hostnameFromUrl(url)) return;
+
+  await chrome.storage.session.set({ [reportKey(tabId)]: report });
+  if (report.severity == null) return;
+  setBadge(tabId, report.level, tabState.get(tabId)?.blocked);
+  tabState.set(tabId, {
+    ...(tabState.get(tabId) || {}),
+    url,
+    domain: report.domain,
+    score: report.severity,
+    level: report.level,
+    summary: report.summary,
+    factors: report.criteria.flatMap((c) => c.evidence),
+    updatedAt: Date.now(),
+  });
+}
+
+// Guardian's own dashboard and API docs aren't worth a Gemini request. The demo
+// threat page is served from the same place but exists to be scored.
+function isGuardianPage(url) {
+  const { hostname, port, pathname } = new URL(url);
+  return (
+    ["127.0.0.1", "localhost"].includes(hostname) &&
+    ["8741", "8742"].includes(port) &&
+    !pathname.startsWith("/demo/")
+  );
+}
+
+async function shouldRunReport(url, manual) {
+  if (isGuardianPage(url)) return false;
+  if (!manual) {
+    const { autoReport } = await chrome.storage.sync.get(["autoReport"]);
+    if (autoReport === false) return false;
+  }
+  // Blocked pages are about to be replaced by the interstitial.
+  const check = await checkUrl(url);
+  return !check.blocked;
+}
+
 function setBadge(tabId, level, blocked) {
   let text = "";
   let color = "#1f7a5c";
@@ -107,12 +164,14 @@ async function protectTab(tabId, url) {
 
 chrome.webNavigation.onCommitted.addListener((details) => {
   if (details.frameId !== 0) return;
+  void chrome.storage.session.remove(reportKey(details.tabId));
   if (details.url.includes("blocked.html")) return;
   void protectTab(details.tabId, details.url);
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabState.delete(tabId);
+  void chrome.storage.session.remove(reportKey(tabId));
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -161,6 +220,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
       setBadge(tab.id, analysis.level, analysis.blocked);
       return analysis;
+    }
+    if (message.type === "REPORT_GATE") {
+      return { run: await shouldRunReport(message.url, Boolean(message.manual)) };
+    }
+    if (message.type === "GENERATE_REPORT") {
+      const report = await fetchReport(message.url, message.html);
+      if (sender.tab?.id != null) await saveReport(sender.tab.id, message.url, report);
+      return report;
+    }
+    if (message.type === "GET_REPORT") {
+      const key = reportKey(sender.tab?.id);
+      return (await chrome.storage.session.get([key]))[key] || null;
+    }
+    if (message.type === "CLOSE_REPORT_FRAME") {
+      await chrome.tabs.sendMessage(sender.tab.id, { type: "CLOSE_REPORT_FRAME" }, { frameId: 0 });
+      return { ok: true };
     }
     if (message.type === "GET_CONFIG") {
       return { apiBase: await getApiBase(), defaultApiBase: DEFAULT_API_BASE };

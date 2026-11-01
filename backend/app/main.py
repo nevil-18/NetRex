@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import blacklist_store, risk_engine
+from . import ai_report, blacklist_store, report_store, risk_engine
 from .scanner import find_domain_mentions, highlight_selectors, extract_hostname
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -21,9 +21,11 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Saved reports are browsing history, so other websites must not be able to read
+# them. The extension and same-origin dashboard need no wider access than this.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origin_regex=r"chrome-extension://[a-p]{32}|http://(127\.0\.0\.1|localhost):(8741|8742)",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +55,11 @@ class AnalyzeIn(BaseModel):
     url: str
     html: str | None = None
     use_llm: bool = True
+
+
+class ReportIn(BaseModel):
+    url: str
+    html: str | None = None
 
 
 @app.get("/api/health")
@@ -132,6 +139,31 @@ async def analyze(body: AnalyzeIn) -> dict[str, Any]:
     return result
 
 
+@app.post("/api/report")
+def risk_report(body: ReportIn) -> dict[str, Any]:
+    if not extract_hostname(body.url):
+        raise HTTPException(status_code=400, detail="Provide a valid url")
+    return ai_report.generate_report(body.url, body.html)
+
+
+@app.get("/api/reports")
+def list_reports() -> dict[str, Any]:
+    reports = report_store.list_reports()
+    return {"reports": reports, "total": len(reports)}
+
+
+@app.delete("/api/reports")
+def purge_all_reports() -> dict[str, Any]:
+    return {"ok": True, "purged": report_store.purge_all()}
+
+
+@app.delete("/api/reports/item")
+def purge_report(url: str) -> dict[str, Any]:
+    if not report_store.purge(url):
+        raise HTTPException(status_code=404, detail="Report not found")
+    return {"ok": True, "url": url}
+
+
 DEMO_PAGE = """<!doctype html>
 <html lang="en">
 <head>
@@ -166,6 +198,15 @@ def demo_threat_page() -> HTMLResponse:
     return HTMLResponse(DEMO_PAGE)
 
 
+def admin_file(dist: Path, relative_path: str) -> Path | None:
+    """Resolve a file inside the admin build, refusing paths that leave it."""
+    root = dist.resolve()
+    candidate = (root / relative_path).resolve()
+    if candidate.is_relative_to(root) and candidate.is_file():
+        return candidate
+    return None
+
+
 # Serve built admin UI when present
 if ADMIN_DIST.exists():
     assets_dir = ADMIN_DIST / "assets"
@@ -180,8 +221,8 @@ if ADMIN_DIST.exists():
     def admin_spa(full_path: str) -> FileResponse:
         if full_path.startswith(("api/", "docs", "openapi.json", "redoc", "demo/")):
             raise HTTPException(status_code=404, detail="Not found")
-        candidate = ADMIN_DIST / full_path
-        if candidate.is_file():
+        candidate = admin_file(ADMIN_DIST, full_path)
+        if candidate:
             return FileResponse(candidate)
         return FileResponse(ADMIN_DIST / "index.html")
 else:

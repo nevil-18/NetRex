@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import os
+import asyncio
+import json
 import re
 from typing import Any
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
-from . import blacklist_store
+from . import blacklist_store, gemini
 from .scanner import extract_hostname, find_domain_mentions
 
 SUSPICIOUS_TLDS = {
@@ -35,6 +36,8 @@ URGENCY_PATTERNS = [
     r"won\s+a\s+prize",
     r"claim\s+(your\s+)?(reward|prize)",
 ]
+
+LLM_TIMEOUT_SECONDS = 30.0
 
 IP_HOST_RE = re.compile(r"^\d{1,3}(?:\.\d{1,3}){3}$")
 
@@ -77,13 +80,10 @@ def _recommendations(score: int, factors: list[str], blocked: bool) -> list[str]
 
 
 async def _llm_enrich(domain: str, html_excerpt: str, base: dict[str, Any]) -> dict[str, Any] | None:
-    """Optional OpenAI enrichment. Returns None when unavailable."""
-    api_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if not api_key:
+    """Optional Gemini enrichment. Returns None when unavailable."""
+    if not gemini.api_key():
         return None
     try:
-        import httpx
-
         prompt = (
             "You are a cybersecurity analyst. Score phishing/malware risk 0-100 for this domain. "
             "Reply ONLY with compact JSON keys: score (int), summary (string), factors (string array max 4). "
@@ -92,37 +92,19 @@ async def _llm_enrich(domain: str, html_excerpt: str, base: dict[str, Any]) -> d
             f"Heuristic factors: {base.get('factors')}\n"
             f"Page excerpt:\n{html_excerpt[:2500]}"
         )
-        payload = {
-            "model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-            "temperature": 0.2,
-            "response_format": {"type": "json_object"},
-            "messages": [
-                {"role": "system", "content": "Return JSON only."},
-                {"role": "user", "content": prompt},
-            ],
+        content = await asyncio.to_thread(
+            gemini.generate_json, "Return JSON only.", prompt, LLM_TIMEOUT_SECONDS
+        )
+        parsed = json.loads(content)
+        score = _clamp(int(parsed.get("score", base["score"])))
+        factors = list(parsed.get("factors") or [])[:4]
+        summary = str(parsed.get("summary") or "").strip()
+        return {
+            "score": score,
+            "factors": factors,
+            "summary": summary,
+            "llm": True,
         }
-        async with httpx.AsyncClient(timeout=12.0) as client:
-            resp = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={"Authorization": f"Bearer {api_key}"},
-                json=payload,
-            )
-            if resp.status_code >= 400:
-                return None
-            data = resp.json()
-            content = data["choices"][0]["message"]["content"]
-            import json
-
-            parsed = json.loads(content)
-            score = _clamp(int(parsed.get("score", base["score"])))
-            factors = list(parsed.get("factors") or [])[:4]
-            summary = str(parsed.get("summary") or "").strip()
-            return {
-                "score": score,
-                "factors": factors,
-                "summary": summary,
-                "llm": True,
-            }
     except Exception:
         return None
 

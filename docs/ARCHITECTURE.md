@@ -44,7 +44,7 @@ Optional packaging: after `npm run build`, FastAPI can *serve* the built static 
 | Persist / update blacklist | Yes (`blacklist_store` → JSON) | No — only `POST` / `DELETE /api/blacklist` |
 | Decide blocked / score | Yes (`risk_engine`, `scanner`) | No — only displays API JSON |
 | UI layout, forms, gauges | No | Yes |
-| Talk to optional OpenAI | Yes (server-side key) | No |
+| Talk to Google Gemini | Yes (server-side key) | No |
 
 So: **all changes to protected state happen through WebAPI requests.** If the dashboard is offline, the extension and API still work. If you replace the React app with another client (curl, Postman, a mobile UI), the server contract stays the same.
 
@@ -59,7 +59,10 @@ So: **all changes to protected state happen through WebAPI requests.** If the da
 | `main.py` | HTTP boundary: routes, CORS, request models, optional static admin | store, scanner, risk_engine |
 | `blacklist_store.py` | Thread-safe read/write of `data/blacklist.json`; normalize domains; parent-domain match | filesystem only |
 | `scanner.py` | Parse HTML; find blacklist mentions; return highlight payloads | blacklist_store |
-| `risk_engine.py` | Heuristic score (+ optional LLM); recommendations | blacklist_store, scanner |
+| `risk_engine.py` | Heuristic score (+ optional LLM); recommendations | blacklist_store, scanner, gemini |
+| `ai_report.py` | Returns a page's saved report, or fills in `prompts/risk-scoring-prompt.md`, calls the model and computes the weighted risk score and report text | blacklist_store, scanner, gemini, report_store |
+| `gemini.py` | Only module that calls the Google Gemini API | httpx |
+| `report_store.py` | Thread-safe read/write of `data/reports.json`; saved reports stay until purged | filesystem only |
 
 Internal call shape (no HTTP between these modules — plain Python imports):
 
@@ -89,7 +92,9 @@ flowchart LR
 | `config.js` | API base URL from `chrome.storage` |
 | `background.js` | Navigation hook, `/api/check`, `/api/scan`, `/api/analyze`, badge, block redirect |
 | `content.js` | Sends page HTML; paints red highlights from scan results |
-| `popup.js` | Shows score / factors from tab state |
+| `report-ui.js` | Starts the page's risk report; shows toasts and the report frame |
+| `report.html` | Risk report frame: score, severity and description |
+| `popup.js` | Shows score / factors from tab state; reopens the risk report |
 | `blocked.html` | Interstitial when a domain is blacklisted |
 | `options.js` | Change API base URL |
 
@@ -154,12 +159,12 @@ sequenceDiagram
   participant Client as Admin or Extension
   participant API as FastAPI
   participant Risk as risk_engine
-  participant LLM as OpenAI optional
+  participant LLM as Gemini optional
 
   Client->>API: POST /api/analyze {url, html?, use_llm}
   API->>Risk: analyze(...)
   Risk->>Risk: heuristics (TLD, brand bait, urgency, forms, blacklist)
-  opt OPENAI_API_KEY set
+  opt GEMINI_API_KEY set
     Risk->>LLM: enrich summary / factors
     LLM-->>Risk: JSON score blend
   end
@@ -183,6 +188,10 @@ All clients share this contract. Interactive docs: `http://127.0.0.1:8741/docs`
 | `POST` | `/api/check` | Extension (every navigation) | No |
 | `POST` | `/api/scan` | Extension (page HTML) | No |
 | `POST` | `/api/analyze` | Admin analyzer, extension deep analyze | No |
+| `POST` | `/api/report` | Extension (each page load) | **Yes** — saves the first report for a page |
+| `GET` | `/api/reports` | Admin | No |
+| `DELETE` | `/api/reports` | Admin | **Yes** — purge all saved reports |
+| `DELETE` | `/api/reports/item?url=` | Admin | **Yes** — purge one saved report |
 
 Demo-only: `GET /demo/threat-page` serves HTML with blacklisted domain strings so highlighting can be shown without visiting a live phishing host.
 
@@ -190,7 +199,7 @@ Demo-only: `GET /demo/threat-page` serves HTML with blacklisted domain strings s
 
 ## 6. Modularity rules (why this shape)
 
-1. **Single write path** — only `blacklist_store` touches disk; routes and clients go through it.
+1. **Single write path** — only `blacklist_store` and `report_store` touch disk; routes and clients go through them.
 2. **Clients are replaceable** — anything that speaks HTTP can drive the system.
 3. **Scoring is server-side** — keeps API keys and heuristics off the extension/dashboard bundle.
 4. **Extension UI is thin** — background owns network; content/popup only render.

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guardian risk report</title>
+    <link rel="stylesheet" href="report.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <p class="eyebrow">Guardian risk report</p>
+        <h1 id="domain">Loading…</h1>
+      </div>
+      <button id="close" type="button" aria-label="Close report">×</button>
+    </header>
+
+    <main>
+      <section class="score-card" id="score-card" data-level="unknown">
+        <div class="score-row">
+          <div>
+            <div class="label">Risk score</div>
+            <div class="score" id="score">—</div>
+          </div>
+          <div>
+            <div class="label">Severity</div>
+            <div class="severity" id="severity">Unknown</div>
+          </div>
+        </div>
+        <div class="meter" id="meter" role="img" aria-label="Risk score not available">
+          <span id="meter-fill"></span>
+        </div>
+      </section>
+
+      <p id="notice" class="notice" hidden></p>
+
+      <section id="description-section" hidden>
+        <h2>What gave it this score</h2>
+        <div id="description" class="description"></div>
+      </section>
+
+      <section id="criteria-section" hidden>
+        <h2>Score breakdown</h2>
+        <ul id="criteria" class="criteria"></ul>
+      </section>
+
+      <p id="meta" class="meta"></p>
+    </main>
+    <script type="module" src="report.js"></script>
+  </body>
+</html>

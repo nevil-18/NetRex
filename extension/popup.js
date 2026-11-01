@@ -103,6 +103,17 @@ document.getElementById("analyze").addEventListener("click", async () => {
   paint(result);
 });
 
+document.getElementById("report").addEventListener("click", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  try {
+    await chrome.tabs.sendMessage(tab.id, { type: "SHOW_REPORT" });
+    window.close();
+  } catch {
+    errorEl.hidden = false;
+    errorEl.textContent = "Risk reports need a normal webpage. Reload this tab if it was already open.";
+  }
+});
+
 document.getElementById("recheck").addEventListener("click", async () => {
   statusPill.textContent = "Recheck…";
   const result = await chrome.runtime.sendMessage({ type: "RECHECK" });

@@ -29,6 +29,16 @@ export type AnalyzeResult = {
   llm: boolean;
 };
 
+export type SavedReport = {
+  url: string;
+  domain: string;
+  severity: number | null;
+  level: string;
+  summary: string;
+  generated_at: string;
+  model: string;
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
@@ -66,4 +76,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ url, html, use_llm: true }),
     }),
+  reports: () => request<{ reports: SavedReport[]; total: number }>("/api/reports"),
+  purgeReport: (url: string) =>
+    request<{ ok: boolean }>(`/api/reports/item?url=${encodeURIComponent(url)}`, {
+      method: "DELETE",
+    }),
+  purgeAllReports: () =>
+    request<{ ok: boolean; purged: number }>("/api/reports", { method: "DELETE" }),
 };

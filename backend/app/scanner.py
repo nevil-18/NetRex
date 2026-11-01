@@ -22,10 +22,18 @@ def extract_hostname(url: str) -> str:
         return ""
     if "://" not in raw:
         raw = "https://" + raw
-    host = urlparse(raw).hostname or ""
+    try:
+        host = urlparse(raw).hostname or ""
+    except ValueError:  # malformed links such as http://[ must not abort a scan
+        return ""
     if host.startswith("www."):
         host = host[4:]
     return host.lower()
+
+
+def _domain_pattern(domain: str) -> re.Pattern[str]:
+    """Match a domain on label boundaries: not rabbit.ly or bit.ly.evil.com for bit.ly."""
+    return re.compile(rf"(?<![a-z0-9-]){re.escape(domain.lower())}(?![a-z0-9-]|\.[a-z0-9])")
 
 
 def _context_around(text: str, start: int, end: int, pad: int = 48) -> str:
@@ -93,24 +101,13 @@ def find_domain_mentions(html: str, page_url: str = "") -> list[dict[str, Any]]:
     lower_html = (html or "").lower()
     lower_text = text.lower()
     for domain, entry in blacklist.items():
-        needle = domain.lower()
-        # skip matching the page's own host endlessly when analyzing the blocked page itself
-        start = 0
-        while True:
-            idx = lower_text.find(needle, start)
-            if idx < 0:
-                break
-            record(domain, "text", _context_around(text, idx, idx + len(needle)))
-            start = idx + len(needle)
+        pattern = _domain_pattern(domain)
+        for found in pattern.finditer(lower_text):
+            record(domain, "text", _context_around(text, found.start(), found.end()))
 
-        start = 0
-        while True:
-            idx = lower_html.find(needle, start)
-            if idx < 0:
-                break
+        for found in pattern.finditer(lower_html):
             # only count HTML attribute hits that aren't already text-counted heavily
-            record(domain, "html", _context_around(html or "", idx, idx + len(needle)))
-            start = idx + len(needle)
+            record(domain, "html", _context_around(html or "", found.start(), found.end()))
             if hits.get(domain, {}).get("count", 0) > 40:
                 break
 
