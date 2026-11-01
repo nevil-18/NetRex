@@ -1,22 +1,37 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { CriterionResult, Severity } from "./api";
 
+/** NetRex only — letter-by-letter reveal every 5 seconds. */
 export function BrandHeadline({ className = "" }: { className?: string }) {
+  const [cycle, setCycle] = useState(0);
+  const [animating, setAnimating] = useState(true);
+
+  useEffect(() => {
+    setAnimating(true);
+    const settle = window.setTimeout(() => setAnimating(false), 900);
+    const next = window.setTimeout(() => setCycle((c) => c + 1), 5000);
+    return () => {
+      window.clearTimeout(settle);
+      window.clearTimeout(next);
+    };
+  }, [cycle]);
+
   return (
     <h1
-      className={`brand-headline font-[family-name:var(--font-display)] text-5xl font-extrabold leading-[0.95] tracking-tight text-[var(--ink)] sm:text-6xl ${className}`}
+      className={`brand-headline font-[family-name:var(--font-display)] text-5xl font-extrabold italic leading-[0.95] tracking-tight text-[var(--ink)] sm:text-6xl ${className}`}
       aria-label="NetRex"
     >
-      {"NetRex".split("").map((ch, i) => (
-        <span
-          key={`${ch}-${i}`}
-          className="brand-headline__letter"
-          style={{ animationDelay: `${i * 55}ms` }}
-          aria-hidden="true"
-        >
-          {ch}
-        </span>
-      ))}
+      <span className="brand-headline__word brand-headline__word--netrex is-entering">
+        {"NetRex".split("").map((ch, i) => (
+          <span
+            key={`${cycle}-${ch}-${i}`}
+            className="brand-headline__letter"
+            style={{ animationDelay: animating ? `${i * 55}ms` : undefined }}
+          >
+            {ch}
+          </span>
+        ))}
+      </span>
     </h1>
   );
 }
@@ -66,9 +81,11 @@ export function Panel({
 export function RiskGauge({
   score,
   level,
+  headline,
 }: {
   score: number | null;
   level: string;
+  headline?: string;
 }) {
   const radius = 54;
   const circumference = Math.PI * radius;
@@ -80,12 +97,12 @@ export function RiskGauge({
   const color = severityColor(unknown ? null : clamped);
 
   return (
-    <div className="relative mx-auto flex w-full max-w-[220px] flex-col items-center">
+    <div className="relative mx-auto flex w-full max-w-[240px] flex-col items-center">
       <svg viewBox="0 0 140 90" className="w-full">
         <path
           d="M 16 78 A 54 54 0 0 1 124 78"
           fill="none"
-          stroke="#d5e0da"
+          stroke="#e4ddd0"
           strokeWidth="12"
           strokeLinecap="round"
         />
@@ -107,8 +124,14 @@ export function RiskGauge({
         >
           {unknown ? "?" : clamped}
         </div>
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-soft)]">
-          {unknown ? "unknown severity" : `${level} · ${clamped}%`}
+        <div className="mt-0.5 text-[11px] font-medium text-[var(--ink-soft)]">
+          {unknown ? "score unavailable" : "out of 100"}
+        </div>
+        <div
+          className="mt-1 max-w-[220px] text-[10px] font-semibold uppercase tracking-[0.12em]"
+          style={{ color }}
+        >
+          {headline || (unknown ? "unknown severity" : `${level} · ${clamped}%`)}
         </div>
       </div>
     </div>
