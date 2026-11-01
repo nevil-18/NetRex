@@ -13,7 +13,11 @@ Chrome extension  ──►  FastAPI WebAPI  ──►  blacklist.json
 
 ## Quick start
 
+You need Python 3.11+ and Node.js 20.19+ or 22.12+.
+
 ### 1. Set up (first time only)
+
+Linux and macOS:
 
 ```bash
 python3 -m venv backend/.venv
@@ -21,13 +25,33 @@ backend/.venv/bin/pip install -r backend/requirements.txt
 npm install --prefix admin
 ```
 
+Windows (PowerShell, from the project folder):
+
+```powershell
+py -m venv backend\.venv
+backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+npm.cmd install --prefix admin
+```
+
+If Windows can't find `py`, use `python` instead. Use `npm.cmd` rather than `npm`, because PowerShell's default execution policy blocks the `npm` script.
+
 ### 2. Start the backend and admin console
+
+Linux and macOS:
 
 ```bash
 ./start.sh
 ```
 
-The script asks for your `GEMINI_API_KEY`, or uses it without asking if it's already exported. It then starts both servers in one terminal. Press Ctrl-C to stop them. If one server exits, the other stops too.
+Windows (PowerShell):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
+
+The `-ExecutionPolicy Bypass` option applies only to this command and lets Windows run the script without changing your system settings.
+
+The script asks for your `GEMINI_API_KEY`, or uses it without asking if it's already set in your environment. It then starts both servers in one terminal. Press Ctrl-C to stop them. If one server exits, the other stops too.
 
 | Service | URL |
 | --- | --- |
@@ -40,9 +64,9 @@ The default model is `gemini-3.8-flash`. Set `GEMINI_MODEL` to use another, such
 
 Gemini sometimes answers `503` when a model is overloaded, especially on the free tier. NetRex waits and retries, then tries `gemini-3.6-flash` and `gemini-3.5-flash-lite`, and each report names the model that produced it. Set `GEMINI_FALLBACK_MODELS` to a comma-separated list to change the fallbacks, or leave it empty for none.
 
-`start.sh` requires a key. To run without one, start the backend on its own as shown below. The popup's heuristic score still works (blacklist, suspicious TLDs, brand bait, urgency language, password forms, etc.), but risk reports show as unavailable.
+The start scripts require a key. To run without one, start the backend on its own as shown below. The popup's heuristic score still works (blacklist, suspicious TLDs, brand bait, urgency language, password forms, etc.), but risk reports show as unavailable.
 
-With the virtual environment active, run the backend tests with `python3 -m pip install pytest && cd backend && python3 -m pytest tests`.
+With the virtual environment active, run the backend tests with `python3 -m pip install pytest && cd backend && python3 -m pytest tests`. On Windows, run `cd backend; .venv\Scripts\python.exe -m pytest tests`.
 
 ### 3. Chrome extension
 
@@ -64,6 +88,14 @@ export GEMINI_API_KEY=your-key
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8741
 ```
 
+Backend on Windows (PowerShell):
+
+```powershell
+cd backend
+$env:GEMINI_API_KEY = "your-key"
+.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8741
+```
+
 Admin console (port `8742`):
 
 ```bash
@@ -71,10 +103,25 @@ cd admin
 npm run dev
 ```
 
+Admin console on Windows (PowerShell):
+
+```powershell
+cd admin
+npm.cmd run dev
+```
+
 Or build the admin console and let FastAPI serve it from `/`:
 
 ```bash
 cd admin && npm run build
+# then start the backend and open http://127.0.0.1:8741
+```
+
+To build on Windows (PowerShell):
+
+```powershell
+cd admin
+npm.cmd run build
 # then start the backend and open http://127.0.0.1:8741
 ```
 
