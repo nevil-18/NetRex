@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blocked by Guardian</title>
+    <link rel="stylesheet" href="blocked.css" />
+  </head>
+  <body>
+    <main class="panel">
+      <p class="eyebrow">Guardian protection</p>
+      <h1>This site is blocked</h1>
+      <p id="reason" class="reason">Blacklisted domain</p>
+      <div class="meta">
+        <div>
+          <span>Domain</span>
+          <strong id="domain">—</strong>
+        </div>
+        <div>
+          <span>Risk score</span>
+          <strong id="score">—</strong>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="back" type="button">Go back to safety</button>
+        <a id="console" href="http://127.0.0.1:8742" target="_blank" rel="noreferrer"
+          >Open console</a
+        >
+      </div>
+      <p class="fine">
+        Destination held:
+        <code id="target">—</code>
+      </p>
+    </main>
+    <script src="blocked.js"></script>
+  </body>
+</html>

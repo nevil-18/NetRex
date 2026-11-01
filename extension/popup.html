@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guardian</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="top">
+        <div>
+          <p class="eyebrow">AI Cybersecurity</p>
+          <h1>Guardian</h1>
+        </div>
+        <div id="status-pill" class="pill">Checking…</div>
+      </header>
+
+      <section class="gauge-wrap">
+        <svg viewBox="0 0 140 90" class="gauge" aria-hidden="true">
+          <path
+            d="M 16 78 A 54 54 0 0 1 124 78"
+            fill="none"
+            stroke="#d5e0da"
+            stroke-width="12"
+            stroke-linecap="round"
+          />
+          <path
+            id="gauge-arc"
+            d="M 16 78 A 54 54 0 0 1 124 78"
+            fill="none"
+            stroke="#1f7a5c"
+            stroke-width="12"
+            stroke-linecap="round"
+            stroke-dasharray="169.65"
+            stroke-dashoffset="169.65"
+          />
+        </svg>
+        <div class="gauge-label">
+          <div id="score">—</div>
+          <div id="level">risk</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div id="domain" class="domain">—</div>
+        <p id="summary" class="summary">Open a page to score threats.</p>
+      </section>
+
+      <section class="card">
+        <h2>Why this score</h2>
+        <ul id="factors" class="factors">
+          <li class="muted">No signals yet.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>What to do</h2>
+        <ol id="tips" class="tips">
+          <li class="muted">Stay on official domains you typed yourself.</li>
+        </ol>
+      </section>
+
+      <footer class="actions">
+        <button id="analyze" type="button">Deep analyze</button>
+        <button id="recheck" type="button" class="ghost">Recheck</button>
+        <button id="options" type="button" class="ghost">API</button>
+      </footer>
+      <p id="error" class="error" hidden></p>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

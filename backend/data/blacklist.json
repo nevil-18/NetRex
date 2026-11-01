@@ -1,0 +1,70 @@
+{
+  "domains": [
+    {
+      "domain": "phish-secure-login.com",
+      "reason": "Known credential harvesting site",
+      "added_at": "2026-10-01T12:00:00Z",
+      "severity": "critical"
+    },
+    {
+      "domain": "paypal-verify-account.net",
+      "reason": "Brand impersonation of PayPal",
+      "added_at": "2026-10-05T09:30:00Z",
+      "severity": "critical"
+    },
+    {
+      "domain": "microsoft-support-desk.xyz",
+      "reason": "Fake Microsoft support phishing",
+      "added_at": "2026-10-08T15:20:00Z",
+      "severity": "high"
+    },
+    {
+      "domain": "free-crypto-airdrop.tk",
+      "reason": "Cryptocurrency scam lure",
+      "added_at": "2026-10-12T11:00:00Z",
+      "severity": "high"
+    },
+    {
+      "domain": "bankofamerica-secure.ml",
+      "reason": "Banking phishing mirror",
+      "added_at": "2026-10-15T08:45:00Z",
+      "severity": "critical"
+    },
+    {
+      "domain": "bit.ly",
+      "reason": "URL shortener often used to obscure destinations",
+      "added_at": "2026-10-18T14:00:00Z",
+      "severity": "medium"
+    },
+    {
+      "domain": "tinyurl.com",
+      "reason": "URL shortener \u2014 inspect destination carefully",
+      "added_at": "2026-10-18T14:00:00Z",
+      "severity": "medium"
+    },
+    {
+      "domain": "malicious-download.ru",
+      "reason": "Distributes malware payloads",
+      "added_at": "2026-10-20T16:30:00Z",
+      "severity": "critical"
+    },
+    {
+      "domain": "amazon-prize-winner.info",
+      "reason": "Fake Amazon prize phishing",
+      "added_at": "2026-10-22T10:10:00Z",
+      "severity": "high"
+    },
+    {
+      "domain": "secure-appleid-update.com",
+      "reason": "Apple ID credential theft",
+      "added_at": "2026-10-25T13:00:00Z",
+      "severity": "critical"
+    },
+    {
+      "domain": "hackathon-phish-demo.test",
+      "reason": "Hackathon demo entry",
+      "added_at": "2026-10-31T21:54:11Z",
+      "severity": "high"
+    }
+  ]
+}

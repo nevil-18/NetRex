@@ -1,0 +1,12 @@
+{
+  "name": "ai-cybersecurity-guardian",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hackathon: Chrome extension + FastAPI + admin console for phishing defense",
+  "scripts": {
+    "api": "cd backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8741 --reload",
+    "admin": "cd admin && npm run dev -- --host 0.0.0.0 --port 8742",
+    "admin:build": "cd admin && npm run build",
+    "install:all": "python3 -m pip install -r backend/requirements.txt && cd admin && npm install"
+  }
+}
