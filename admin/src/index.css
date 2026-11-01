@@ -201,6 +201,22 @@ body::before {
   }
 }
 
+.workspace-split {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .workspace-split {
+    grid-template-columns: minmax(0, 65%) minmax(0, 35%);
+  }
+}
+
+.analyzer-panel {
+  position: sticky;
+  top: 1rem;
+  width: 100%;
+}
+
 .analyzer-tagline {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -270,4 +286,22 @@ body::before {
   background: color-mix(in srgb, var(--signal) 14%, white);
   border-color: color-mix(in srgb, var(--signal) 30%, transparent);
   color: var(--signal-deep);
+}
+
+.analyzer-results {
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+}
+
+.analyzer-results::-webkit-scrollbar {
+  width: 8px;
+}
+
+.analyzer-results::-webkit-scrollbar-thumb {
+  background: #b7c9bf;
+  border-radius: 999px;
+}
+
+.analyzer-results::-webkit-scrollbar-track {
+  background: transparent;
 }
