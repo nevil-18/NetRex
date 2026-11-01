@@ -86,3 +86,32 @@ Notes:
 - Responses are cached in `evaluation/results/`, so re-running costs nothing. Delete the cache file after
   changing the prompt, otherwise old answers are reused.
 - Free-tier Gemini content may be used by Google to improve products. Only public test URLs are sent.
+
+## Benchmarking the team's real AI report (`evaluate_report.py`)
+
+The `featureimpl` branch scores pages with `ai_report.generate_report(url, html)` (the function behind
+`POST /api/report`): the team's prompt, the server-side weighted severity, and the Gemini client with
+its fallback models. `evaluate_report.py` calls that exact function for every URL in `test_urls.csv`
+and reports precision / recall / F1, the false positives and false negatives, and a comparison with the
+rule-based score. **Nothing is merged and no team code is changed.**
+
+```bash
+# 1. Get the featureimpl backend folder (GitHub "Download ZIP" on the featureimpl branch) and unzip it.
+# 2. Install only what it needs:
+pip install httpx beautifulsoup4 lxml
+# 3. Run (PowerShell). Replace the path with where you unzipped the backend folder.
+$env:GEMINI_API_KEY="your-key"
+python evaluation/evaluate_report.py --backend C:\path\to\NetRex-featureimpl\backend --mock    # pipeline test
+python evaluation/evaluate_report.py --backend C:\path\to\NetRex-featureimpl\backend --limit 10
+python evaluation/evaluate_report.py --backend C:\path\to\NetRex-featureimpl\backend
+```
+
+- `--mock` replaces only the model call with a rule-based stand-in, so the whole pipeline can be tested
+  without an API key. Its numbers are meaningless.
+- Reports are saved to `evaluation/results/eval_reports_<tag>.json`, never to the team's `reports.json`.
+  Re-running reuses finished URLs; add `--fresh` to start over.
+- The blacklist is switched off in memory so the AI score is measured on sites that are not already listed.
+- URL-only input: no page HTML is sent, so script, form and text evidence is empty. The output shows which
+  model answered (main or fallback) and counts URLs that got no score ("unknown"), which are excluded from
+  the metrics and never treated as safe.
+- Nothing is enforced. Threshold lines in the output are reference values for a later step.

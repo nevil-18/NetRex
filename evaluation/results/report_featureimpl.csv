@@ -1,0 +1,66 @@
+url,label,category,severity,level,lookalike,scripts,ai_judgement,tld,model,injection_detected,error,summary
+http://paypa1-secure-login.xyz/verify,1,lookalike_tld,70,high,90,10,85,65,gemini-3.5-flash-lite,False,,This website is a high-risk phishing attempt using a typosquatted domain to impersonate PayPal's login and verification pages.
+http://login.microsoft.com.evil-site.ru/,1,brand_in_subdomain,70,high,90,10,85,85,gemini-3.5-flash-lite,False,,This website uses a deceptive subdomain structure on a high-risk domain to impersonate Microsoft login services.
+http://203.0.113.7/signin,1,ip_host,70,high,0,10,50,90,gemini-3.5-flash-lite,False,,"The website hosts a sign-in page directly on a raw IP address, raising high suspicion of phishing or fraudulent activity."
+https://apple-id-verify.top/account/unlock,1,lookalike_tld,58,medium,85,10,80,65,gemini-3.5-flash-lite,False,,The website appears to be a phishing attempt targeting Apple user accounts based on its brand-impersonating domain and suspicious URL path.
+http://amazon-order-problem.click/pay,1,lookalike_tld,53,medium,75,10,70,65,gemini-3.5-flash-lite,False,,This website uses an Amazon-themed combosquatting domain on a high-risk TLD to likely conduct phishing or payment scams.
+https://netflix-billing-update.tk/login,1,lookalike_tld,70,high,85,10,90,90,gemini-3.5-flash-lite,False,,This website is classified as a high-risk phishing attempt due to its brand-impersonating domain and billing-update theme on an abused TLD.
+http://secure.chase-online-verify.ml/signin,1,lookalike_tld,70,high,90,20,90,85,gemini-3.5-flash-lite,False,,"This website is a clear credential phishing attempt, using a high-risk TLD and a lookalike domain to impersonate Chase Bank."
+https://wellsfargo-alert.buzz/confirm,1,lookalike_tld,70,high,90,20,85,85,gemini-3.5-flash-lite,False,,This website is a high-risk phishing attempt that uses a suspicious TLD and combosquatting to impersonate Wells Fargo.
+http://dhl-parcel-fee.work/track,1,lookalike_tld,53,medium,75,10,70,65,gemini-3.5-flash-lite,False,,This website uses a suspicious domain and TLD to impersonate DHL for likely phishing or parcel scam purposes.
+https://irs-refund-claim.win/form,1,lookalike_tld,58,medium,80,10,85,65,gemini-3.5-flash-lite,False,,"The website uses a suspicious TLD and combosquatting to impersonate the IRS, indicating a likely tax scam or phishing attempt."
+http://coinbase-wallet-support.xyz/recover,1,lookalike_tld,70,high,90,20,85,65,gemini-3.5-flash-lite,False,,This website uses a suspicious .xyz domain to impersonate Coinbase support for a likely wallet recovery phishing scam.
+https://metamask-verify-wallet.top/connect,1,lookalike_tld,60,high,85,10,85,65,gemini-3.5-flash-lite,False,,This website uses a heavily abused TLD and combo-squats the MetaMask brand to orchestrate a potential wallet phishing scam.
+http://facebook-security-check.ga/login,1,lookalike_tld,70,high,90,10,90,85,gemini-3.5-flash-lite,False,,This website is a high-risk phishing page utilizing a suspicious TLD and a Facebook lookalike domain to steal user credentials.
+https://instagram-copyright-appeal.gq/form,1,lookalike_tld,64,high,85,20,80,85,gemini-3.5-flash-lite,False,,This website uses a heavily abused TLD and a lookalike domain structure designed to impersonate Instagram for a phishing attack.
+http://free-prize-winner-2026.cf/claim,1,prize_lure,28,low,10,10,65,60,gemini-3.5-flash-lite,False,,"The website uses a high-risk TLD and a suspicious URL structure associated with prize scams, though visible content is minimal."
+https://whatsapp-web-update.zip/login,1,lookalike_tld,56,medium,75,10,70,85,gemini-3.5-flash-lite,False,,"The website uses a high-risk TLD and impersonates WhatsApp in the hostname, suggesting a potential phishing setup."
+http://account-suspended-notice.loan/verify,1,generic_bait,33,medium,30,0,65,65,gemini-3.5-flash-lite,False,,The website uses a suspicious domain and URL structure typical of account suspension phishing scams.
+https://update-your-password.stream/login,1,generic_bait,41,medium,40,10,70,65,gemini-3.5-flash-lite,False,,The website uses a suspicious domain structure and login path intended to trick users into entering credentials.
+https://paypal.com.account-verify.info/signin,1,brand_in_subdomain,70,high,90,20,90,85,gemini-3.5-flash-lite,False,,"This website is a clear credential phishing attempt, utilizing a deceptive subdomain to impersonate PayPal on an unrelated domain."
+http://appleid.apple.com.verify-session.xyz/,1,brand_in_subdomain,70,high,90,10,80,85,gemini-3.5-flash-lite,False,,This website is a high-risk phishing attempt using a deceptive subdomain structure to impersonate Apple.
+https://support-amazon.com-orders.top/,1,brand_in_subdomain,59,medium,80,10,75,85,gemini-3.5-flash-lite,False,,The website uses a suspicious domain and brand-impersonating hostname that strongly suggests a phishing or support scam.
+http://g00gle-account-recovery.com/,1,lookalike_clean_tld,70,high,90,10,85,15,gemini-3.5-flash-lite,False,,The website uses an obvious typosquatting domain designed to impersonate Google account recovery for phishing purposes.
+https://rnicrosoft-support.com/,1,lookalike_clean_tld,70,high,90,10,80,35,gemini-3.5-flash-lite,False,,"The website uses a homoglyph lookalike domain ('rnicrosoft') to impersonate Microsoft support, posing a high risk for phishing or tech support scams."
+https://secure-login.microsoftonline-verify.com/,1,lookalike_clean_tld,70,high,90,10,85,60,gemini-3.5-flash-lite,False,,"This website uses a suspicious domain structure to impersonate Microsoft login services, indicating a likely phishing risk."
+https://secure-document-share.com/login,1,generic_clean_tld,30,medium,40,10,40,35,gemini-3.5-flash-lite,False,,Generic login URL on a suspicious keyword-based domain with minimal content provided.
+https://my-account-portal.com/signin,1,generic_clean_tld,22,low,40,0,30,15,gemini-3.5-flash-lite,False,,"The website uses a generic login portal domain name with thin content, presenting a moderate risk of being a credential collection page."
+https://login-verify-support.net/update,1,generic_clean_tld,40,medium,50,10,70,40,gemini-3.5-flash-lite,False,,The website uses a suspicious generic support hostname typically associated with credential harvesting and phishing attacks.
+https://xn--pypal-4ve.com/login,1,punycode,70,high,90,10,85,90,gemini-3.5-flash-lite,False,,The website uses a punycode hostname to impersonate PayPal in a likely phishing attempt.
+https://sites.google.com/view/account-verify-form,1,trusted_platform,8,low,10,0,25,0,gemini-3.5-flash-lite,False,,"The URL uses Google's legitimate hosting platform, but the path suggests an account verification form with no visible content."
+https://docs.google.com/forms/d/e/1FAIpQLSexample/viewform,1,trusted_platform,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is a legitimate Google Forms URL hosted on Google's official infrastructure with no detected risks.
+https://www.google.com/search?q=weather,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official, legitimate Google domain with no risk indicators detected."
+https://mail.google.com/mail/u/0/,0,brand_subdomain,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate official domain for Google Mail and poses no security risks.
+https://docs.google.com/document/d/abc123/edit,0,brand_subdomain,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is a legitimate Google Docs URL with no indications of malicious activity.
+https://accounts.google.com/signin,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate and official Google accounts sign-in page with no security risks detected.
+https://myaccount.google.com/security,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the official and legitimate Google Account security page.
+https://github.com/login,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official GitHub login domain, presenting no security risks."
+https://en.wikipedia.org/wiki/Phishing,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is a legitimate informational page on Wikipedia about phishing, posing zero risk to the user."
+https://www.amazon.com/,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official and legitimate Amazon website, presenting no security risks."
+https://aws.amazon.com/,0,brand_subdomain,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the official and legitimate Amazon Web Services domain with no indicators of risk.
+https://login.microsoftonline.com/,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the official and legitimate login portal for Microsoft online services.
+https://login.live.com/,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the official and legitimate login domain for Microsoft services with no identified security risks.
+https://www.paypal.com/signin,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate and official PayPal sign-in page with no security risks detected.
+https://www.facebook.com/login,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate and official login page for Facebook with no indicators of risk or deception.
+https://www.instagram.com/accounts/login/,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate and official login page for Instagram.
+https://www.netflix.com/login,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate official login page for Netflix and poses no security risk.
+https://www.coinbase.com/signin,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate and official sign-in page for Coinbase with no detected security risks.
+https://secure.bankofamerica.com/login/sign-in/signOn.go,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official and legitimate login page for Bank of America, presenting no security risks."
+https://signin.ebay.com/,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate official sign-in page for eBay under its genuine domain name.
+https://www.dropbox.com/login,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official, legitimate login page for Dropbox with no security risks detected."
+https://slack.com/signin,0,brand_login,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official, legitimate sign-in page for Slack."
+https://support.apple.com/,0,brand_subdomain,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official, legitimate support website for Apple."
+https://www.wellsfargo.com/,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the legitimate, official website for Wells Fargo with no identified security risks."
+https://www.irs.gov/refunds,0,gov,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the legitimate, official United States Internal Revenue Service website for checking tax refunds, presenting no security risks."
+https://www.dhl.com/us-en/home/tracking.html,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the official domain for DHL with a reputable TLD and no visible risk indicators based on the provided metadata.
+https://www.fedex.com/en-us/tracking.html,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate and official tracking website for FedEx.
+https://www.ups.com/track,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official, legitimate tracking website for UPS with no risk indicators."
+https://www.troy.edu/,0,edu,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official and legitimate website of Troy University (.edu), presenting no security risks."
+https://www.hufs.ac.kr/,0,edu,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate official website of Hankuk University of Foreign Studies (.ac.kr) and poses no security risk.
+https://www.nytimes.com/,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the legitimate, highly reputable official website of The New York Times with no detected security risks."
+https://stackoverflow.com/questions/11227809,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the legitimate and highly trusted Stack Overflow website with no security risks detected.
+https://developer.mozilla.org/en-US/docs/Web,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official, highly trusted Mozilla Developer Network website and poses no risk to users."
+https://zoom.us/j/123456789,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,This is the official and legitimate domain for Zoom video conferencing.
+https://news.ycombinator.com/,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official, trusted domain for Hacker News with no identified risks."
+https://www.reddit.com/login,0,popular,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the official login page for Reddit on a reputable domain, presenting no security risks."
+http://example.com/,0,http_benign,0,low,0,0,0,0,gemini-3.5-flash-lite,False,,"This is the standard, safe example.com domain used for documentation and testing with no risk detected."
