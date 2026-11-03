@@ -12,7 +12,7 @@
 
 param(
     [string]$Repo = ".",
-    [double]$SecondsPerDay = 300,
+    [double]$SecondsPerDay = 100,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$GourceArgs
 )
